@@ -1,54 +1,119 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { View, Image, StyleSheet, Platform } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
+import MapScreen from '../screens/MapScreen';
 import BookingScreen from '../screens/BookingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import MapScreen from '../screens/MapScreen';
-import { View, Text, Image } from 'react-native';
 
 const Tab = createBottomTabNavigator();
-
-const getTabIcon = (routeName) => {
-  switch (routeName) {
-    case 'Home':
-      return require('../assets/icons/home.png');
-    case 'Wallet':
-      return require('../assets/icons/wallet.png');
-    case 'Bookings':
-      return require('../assets/icons/bookings.png');
-    case 'Profile':
-      return require('../assets/icons/profile.png');
-    case 'Map':
-      return require('../assets/icons/map.png');
-    default:
-      return require('../assets/icons/default.png');
-  }
-};
 
 const AppNavigation = () => {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ color, size }) => (
-            <Image source={getTabIcon(route.name)} style={{ width: size, height: size, tintColor: color }} />
-          ),
-          tabBarActiveTintColor: '#6d28d9',
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: { backgroundColor: '#fff', paddingBottom: 5, height: 60 },
-          tabBarLabelStyle: { fontSize: 12, fontWeight: 'bold' },
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Wallet" component={WalletScreen} />
-        <Tab.Screen name="Map" component={MapScreen} />
-        <Tab.Screen name="Bookings" component={BookingScreen} />
-        <Tab.Screen name="Profile" component={ProfileScreen} />
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarStyle: styles.navBar,
+        }}>
+        <Tab.Screen 
+          name="Home" 
+          component={HomeScreen} 
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <View style={[styles.iconContainer, focused && styles.activeTab]}>
+                <Image source={require('../assets/icons/home.png')} style={styles.icon} />
+              </View>
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Wallet" 
+          component={WalletScreen} 
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <View style={[styles.iconContainer, focused && styles.activeTab]}>
+                <Image source={require('../assets/icons/wallet.png')} style={styles.icon} />
+              </View>
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Map" 
+          component={MapScreen} 
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <View style={[styles.iconContainer, focused && styles.activeTab]}>
+                <Image source={require('../assets/icons/map.png')} style={styles.icon} />
+              </View>
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Bookings" 
+          component={BookingScreen} 
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <View style={[styles.iconContainer, focused && styles.activeTab]}>
+                <Image source={require('../assets/icons/bookings.png')} style={styles.icon} />
+              </View>
+            ),
+          }}
+        />
+        <Tab.Screen 
+          name="Profile" 
+          component={ProfileScreen} 
+          options={{
+            tabBarIcon: ({ focused }) => (
+              <View style={[styles.iconContainer, focused && styles.activeTab]}>
+                <Image source={require('../assets/icons/profile.png')} style={styles.icon} />
+              </View>
+            ),
+          }}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
 };
+
+const styles = StyleSheet.create({
+    navBar: {
+      position: 'absolute',
+      bottom: 10,
+      left: 10,
+      right: 10,
+      backgroundColor: 'white',
+      borderRadius: 30,
+      height: 100, // Increase navbar height
+      elevation: 10,
+      shadowColor: '#000',
+      shadowOpacity: 0.2,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      flexDirection: 'row',
+      alignItems: 'center', // Center items vertically
+      justifyContent: 'space-around', // Space evenly
+      paddingBottom: 25, // Adjust padding
+    },
+    iconContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 70, // Increase clickable area
+      height: 70,
+      borderRadius: 35, // Make it round
+    },
+    activeTab: {
+      backgroundColor: '#E6E6FA',
+    },
+    icon: {
+      width: 55, // Increase icon size
+      height: 55,
+      resizeMode: 'contain',
+    }
+  });
+  
 
 export default AppNavigation;
