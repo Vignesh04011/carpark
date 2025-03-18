@@ -1,10 +1,20 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking } from 'react-native';
 
 const ProfileScreen = ({ navigation }) => {
+  
+  // Function to open WhatsApp
+  const openWhatsApp = () => {
+    const whatsappGroupLink = 'https://chat.whatsapp.com/KXzVe0JrDeF4yx1eLyabrT'; // Replace with your WhatsApp group link
+    Linking.openURL(whatsappGroupLink).catch(() => {
+      alert('Make sure WhatsApp is installed on your device.');
+    });
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
+        
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
@@ -26,7 +36,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.actionText}>Add Cash To Wallet</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.walletButton}>
+          <TouchableOpacity style={styles.walletButton} onPress={openWhatsApp}>
             <Image source={require('../assets/icons/help.png')} style={styles.icon} />
             <Text style={styles.actionText}>Get Help</Text>
             <Text style={styles.actionTextSmall}>Solve Issue</Text>
@@ -39,7 +49,7 @@ const ProfileScreen = ({ navigation }) => {
           <ProfileItem 
             icon={require('../assets/icons/profile1.png')} 
             text="Profile" 
-            onPress={() => navigation.navigate('UserProfile')} // Added navigation
+            onPress={() => navigation.navigate('UserProfile')}
           />
           <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" />
           <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" />
@@ -81,7 +91,7 @@ const ProfileItem = ({ icon, text, onPress }) => (
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 80, // Extra space for the bottom navigation
+    paddingBottom: 80,
   },
   container: {
     flex: 1,

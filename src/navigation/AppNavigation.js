@@ -23,6 +23,13 @@ const ProfileStack = () => {
   );
 };
 
+// Function to create tab icons
+const TabIcon = ({ source, focused }) => (
+  <View style={[styles.iconContainer, focused && styles.activeTab]}>
+    <Image source={source} style={styles.icon} />
+  </View>
+);
+
 const AppNavigation = () => {
   return (
     <NavigationContainer>
@@ -36,55 +43,35 @@ const AppNavigation = () => {
           name="Home" 
           component={HomeScreen} 
           options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={[styles.iconContainer, focused && styles.activeTab]}>
-                <Image source={require('../assets/icons/home.png')} style={styles.icon} />
-              </View>
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/home.png')} focused={focused} />,
           }}
         />
         <Tab.Screen 
           name="Wallet" 
           component={WalletScreen} 
           options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={[styles.iconContainer, focused && styles.activeTab]}>
-                <Image source={require('../assets/icons/wallet.png')} style={styles.icon} />
-              </View>
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/wallet.png')} focused={focused} />,
           }}
         />
         <Tab.Screen 
           name="Map" 
           component={MapScreen} 
           options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={[styles.iconContainer, focused && styles.activeTab]}>
-                <Image source={require('../assets/icons/map.png')} style={styles.icon} />
-              </View>
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/map.png')} focused={focused} />,
           }}
         />
         <Tab.Screen 
           name="Bookings" 
           component={BookingScreen} 
           options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={[styles.iconContainer, focused && styles.activeTab]}>
-                <Image source={require('../assets/icons/bookings.png')} style={styles.icon} />
-              </View>
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/bookings.png')} focused={focused} />,
           }}
         />
         <Tab.Screen 
           name="Profile" 
-          component={ProfileStack} // Use the Profile stack navigator
+          component={ProfileStack} // Using Profile Stack Navigator
           options={{
-            tabBarIcon: ({ focused }) => (
-              <View style={[styles.iconContainer, focused && styles.activeTab]}>
-                <Image source={require('../assets/icons/profile.png')} style={styles.icon} />
-              </View>
-            ),
+            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/profile.png')} focused={focused} />,
           }}
         />
       </Tab.Navigator>
