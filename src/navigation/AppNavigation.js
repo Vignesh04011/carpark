@@ -6,6 +6,7 @@ import { View, Image, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import WalletScreen from '../screens/WalletScreen';
 import MapScreen from '../screens/MapScreen';
+import ConfirmBookingScreen from '../screens/ConfirmBookingScreen'; // ✅ ADDED THIS
 import BookingScreen from '../screens/BookingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
@@ -36,6 +37,16 @@ const ProfileStack = () => {
           headerTransparent: true,
         }} 
       />
+    </Stack.Navigator>
+  );
+};
+
+// ✅ Stack Navigator for Map & Booking
+const MapStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MapMain" component={MapScreen} />
+      <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
     </Stack.Navigator>
   );
 };
@@ -71,7 +82,7 @@ const AppNavigation = () => {
         />
         <Tab.Screen 
           name="Map" 
-          component={MapScreen} 
+          component={MapStack}  // ✅ Updated to use MapStack
           options={{
             tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/map.png')} focused={focused} />,
           }}
@@ -85,7 +96,7 @@ const AppNavigation = () => {
         />
         <Tab.Screen 
           name="Profile"
-          component={ProfileStack}  // ✅ FIXED: Pass component directly
+          component={ProfileStack}  
           options={{
             tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/profile.png')} focused={focused} />,
           }}

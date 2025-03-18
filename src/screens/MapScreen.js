@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import { useNavigation } from '@react-navigation/native';
 
 const MapScreen = () => {
   const [selectedSpot, setSelectedSpot] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation(); // Navigation Hook
 
   const centerLocation = {
     latitude: 18.820721,
@@ -69,6 +71,13 @@ const MapScreen = () => {
     setModalVisible(true);
   };
 
+  const handleBookSlot = () => {
+    setModalVisible(false);
+    if (selectedSpot) {
+      navigation.navigate('ConfirmBooking', { spot: selectedSpot }); // ✅ Fixed Navigation Name
+    }
+  };
+
   return (
     <View style={styles.container}>
       <MapView style={styles.map} initialRegion={centerLocation}>
@@ -112,7 +121,7 @@ const MapScreen = () => {
                 {selectedSpot.booked ? (
                   <Text style={styles.soldOutMessage}>⚠️ This parking is fully booked.</Text>
                 ) : (
-                  <TouchableOpacity style={styles.bookButton} onPress={() => setModalVisible(false)}>
+                  <TouchableOpacity style={styles.bookButton} onPress={handleBookSlot}>
                     <Text style={styles.bookText}>Book the Slot</Text>
                   </TouchableOpacity>
                 )}
