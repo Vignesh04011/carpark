@@ -51,6 +51,14 @@ const MapStack = () => {
   );
 };
 
+const BookingStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="BookingsMain" component={BookingScreen} />
+    </Stack.Navigator>
+  );
+};
+
 const TabIcon = ({ source, focused }) => (
   <View style={[styles.iconContainer, focused && styles.activeTab]}>
     <Image source={source} style={styles.icon} />
@@ -89,7 +97,7 @@ const AppNavigation = () => {
         />
         <Tab.Screen 
           name="Bookings" 
-          component={BookingScreen} 
+          component={BookingStack}  // ✅ Updated to use BookingStack
           options={{
             tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/bookings.png')} focused={focused} />,
           }}

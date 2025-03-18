@@ -1,21 +1,50 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import QRCode from 'react-native-qrcode-svg';
 
 const ConfirmBookingScreen = ({ route, navigation }) => {
-  const { spot } = route.params; // ✅ Fix: Access 'spot' instead of 'parkingSpot'
+  const { spot } = route.params;
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [checkInTime, setCheckInTime] = useState(new Date());
   const [checkOutTime, setCheckOutTime] = useState(new Date());
   const [showCheckInPicker, setShowCheckInPicker] = useState(false);
   const [showCheckOutPicker, setShowCheckOutPicker] = useState(false);
+  const [qrData, setQrData] = useState('');
 
   const vehicles = ['Car', 'Bike', 'SUV', 'Truck'];
 
-  const handleBooking = () => {
-    alert(`Booking Confirmed!\nParking: ${spot.name}\nVehicle: ${selectedVehicle}`);
-    navigation.navigate('Home'); // Navigate back to Home or Dashboard
+  const handleBooking = async () => {
+    if (!selectedVehicle) {
+      Alert.alert("Select a vehicle", "Please choose a vehicle before confirming.");
+      return;
+    }
+
+    try {
+      const bookingDetails = {
+        id: Date.now(),
+        name: spot.name,
+        address: spot.address,
+        price: spot.price,
+        checkInTime: checkInTime.toLocaleTimeString(),
+        checkOutTime: checkOutTime.toLocaleTimeString(),
+        vehicle: selectedVehicle,
+      };
+
+      let storedBookings = await AsyncStorage.getItem('bookings');
+      storedBookings = storedBookings ? JSON.parse(storedBookings) : [];
+      storedBookings.push(bookingDetails);
+      await AsyncStorage.setItem('bookings', JSON.stringify(storedBookings));
+
+      setQrData(JSON.stringify(bookingDetails)); // Generate QR Code
+      Alert.alert("Success", "Booking confirmed!");
+      navigation.navigate('Bookings'); // Navigate to Booking History Screen
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Booking failed.");
+    }
   };
 
   return (
@@ -81,9 +110,16 @@ const ConfirmBookingScreen = ({ route, navigation }) => {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleBooking}>
-        <Text style={styles.buttonText}>Confirm Booking</Text>
-      </TouchableOpacity>
+      {qrData ? (
+        <View style={styles.qrContainer}>
+          <QRCode value={qrData} size={150} />
+          <Text>Scan this QR code at the entry</Text>
+        </View>
+      ) : (
+        <TouchableOpacity style={styles.button} onPress={handleBooking}>
+          <Text style={styles.buttonText}>Confirm Booking</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -100,6 +136,7 @@ const styles = StyleSheet.create({
   timeText: { fontSize: 16 },
   button: { backgroundColor: '#6200ea', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 20, width: '90%' },
   buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  qrContainer: { alignItems: 'center', marginTop: 20 }
 });
 
 export default ConfirmBookingScreen;
