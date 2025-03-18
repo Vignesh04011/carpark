@@ -35,8 +35,14 @@ const ConfirmBookingScreen = ({ route, navigation }) => {
 
       let storedBookings = await AsyncStorage.getItem('bookings');
       storedBookings = storedBookings ? JSON.parse(storedBookings) : [];
-      storedBookings.push(bookingDetails);
+
+      // ✅ Add new booking at the beginning
+      storedBookings = [bookingDetails, ...storedBookings];
+
       await AsyncStorage.setItem('bookings', JSON.stringify(storedBookings));
+
+      // ✅ Update active parking session with the latest booking
+      await AsyncStorage.setItem('activeParkingSession', JSON.stringify(bookingDetails));
 
       setQrData(JSON.stringify(bookingDetails)); // Generate QR Code
       Alert.alert("Success", "Booking confirmed!");

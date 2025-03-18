@@ -1,156 +1,183 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-
-const parkingIcon = require('../assets/icons/parking.png');
-const walletIcon = require('../assets/icons/wallet.png');
-const carIcon = require('../assets/icons/car.png');
-const clockIcon = require('../assets/icons/clock.png');
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, Text, Image } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import PromotionsBanner from '../components/PromotionsBanner';
 
 const HomeScreen = () => {
-  const navigation = useNavigation();
-  const [userName, setUserName] = useState('Vignesh');
-  const services = [
-    { id: '1', name: 'NearByParkings', displayName: 'NearBy Parkings', icon: parkingIcon },
-    { id: '2', name: 'Wallet', displayName: 'Wallet', icon: walletIcon },
-    { id: '3', name: 'MyVehicles', displayName: 'My Vehicles', icon: carIcon },
-  ];
-
-  const [timeLeft, setTimeLeft] = useState(4 * 3600);
+  const [recentBooking, setRecentBooking] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const [progress, setProgress] = useState(100); // Start at 100%
 
   useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
-    return () => clearInterval(timer);
+    const fetchRecentBooking = async () => {
+      const bookingData = await AsyncStorage.getItem('activeParkingSession');
+      if (bookingData) {
+        const parsedBooking = JSON.parse(bookingData);
+        setRecentBooking(parsedBooking);
+        calculateTimeLeft(parsedBooking.checkInTime, parsedBooking.checkOutTime);
+      }
+    };
+
+    fetchRecentBooking();
+  }, []);
+
+  const convertToDate = (timeString) => {
+    const now = new Date();
+    const isPM = timeString.toLowerCase().includes('pm');
+    let [hours, minutes, seconds] = timeString.replace(/(am|pm)/i, '').trim().split(':').map(Number);
+
+    if (isPM && hours !== 12) hours += 12; // Convert PM times to 24-hour format
+    if (!isPM && hours === 12) hours = 0; // Convert 12 AM to 0
+
+    now.setHours(hours, minutes, seconds);
+    now.setSeconds(0); // Ensure consistency
+    return now;
+  };
+
+  const calculateTimeLeft = (checkInTime, checkOutTime) => {
+    const now = new Date();
+    const checkIn = convertToDate(checkInTime);
+    const checkOut = convertToDate(checkOutTime);
+
+    const totalDuration = checkOut - checkIn; // Total session duration in ms
+    const remainingTime = checkOut - now; // Remaining time in ms
+
+    if (remainingTime > 0) {
+      setTimeLeft(Math.floor(remainingTime / 1000)); // Convert ms to seconds
+      setProgress((remainingTime / totalDuration) * 100); // Calculate progress
+    } else {
+      setTimeLeft(0);
+      setProgress(0); // Bar empty when expired
+    }
+  };
+
+  useEffect(() => {
+    if (recentBooking) {
+      calculateTimeLeft(recentBooking.checkInTime, recentBooking.checkOutTime);
+    }
+  }, [recentBooking]);
+
+  useEffect(() => {
+    if (timeLeft !== null && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          const newTime = prev > 0 ? prev - 1 : 0;
+          setProgress((newTime / (recentBooking.totalDuration / 1000)) * 100);
+          return newTime;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
   }, [timeLeft]);
 
   const formatTime = (seconds) => {
-    const hrs = String(Math.floor(seconds / 3600)).padStart(2, '0');
-    const mins = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-    const secs = String(seconds % 60).padStart(2, '0');
-    return `${hrs}:${mins}:${secs}`;
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.sessionCard}>
-        <Text style={styles.sessionTitle}>Active Parking Session <Text style={styles.activeBadge}>active</Text></Text>
-        <Text style={styles.welcomeText}>Welcome {'\n'}<Text style={styles.bold}>{userName}</Text></Text>
-        <Text style={styles.uniqueId}>Unique ID:</Text>
-        
-        <View style={styles.timerRow}>
-          <Image source={clockIcon} style={styles.timerIcon} />
-          <Text style={styles.timerText}>{timeLeft > 0 ? formatTime(timeLeft) : 'Session Expired'}</Text>
-          <TouchableOpacity style={styles.detailsButton}>
-            <Text style={styles.detailsText}>Full Details</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <ScrollView style={styles.container}>
+      {/* Promotions & Offers */}
+      <PromotionsBanner />
 
-      <Text style={styles.servicesHeader}>Services</Text>
-      <FlatList
-        data={services}
-        numColumns={3}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.serviceItem}
-            onPress={() => navigation.navigate(item.name)}
-            accessibilityLabel={`Navigate to ${item.displayName}`}
-          >
-            <Image source={item.icon} style={styles.serviceIcon} accessibilityLabel={`${item.displayName} icon`} />
-            <Text style={styles.serviceText}>{item.displayName}</Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      />
-    </View>
+      {/* Active Parking Session */}
+      {recentBooking && (
+        <View style={styles.activeSessionCard}>
+          <Image
+            source={require('../assets/icons/parking-area.png')} // Replace with your icon/image
+            style={styles.parkingIcon}
+          />
+          <View style={styles.details}>
+            <Text style={styles.header}> Active Parking Session</Text>
+            <Text style={styles.text}><Text style={styles.bold}>📍 Parking Area:</Text> {recentBooking.name}</Text>
+            <Text style={styles.text}><Text style={styles.bold}>🚘 Vehicle:</Text> {recentBooking.vehicle}</Text>
+            <Text style={styles.text}><Text style={styles.bold}>⏰ Check-in:</Text> {recentBooking.checkInTime}</Text>
+            <Text style={styles.text}><Text style={styles.bold}>🕒 Check-out:</Text> {recentBooking.checkOutTime}</Text>
+
+            {/* Progress Bar */}
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+            </View>
+
+            {/* Time Left */}
+            <Text style={[styles.timer, timeLeft > 0 ? styles.activeTime : styles.expiredTime]}>
+              ⏳ Time Left: {timeLeft > 0 ? formatTime(timeLeft) : 'Session Expired'}
+            </Text>
+          </View>
+        </View>
+      )}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#F5F5F5',
+    paddingTop: 10,
   },
-  sessionCard: {
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 15,
+  activeSessionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    padding: 20, 
+    marginHorizontal: 15,
+    marginTop: 15,
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 5,
-    elevation: 4,
-    marginBottom: 20,
+    shadowOpacity: 0.1,
+    elevation: 5,
   },
-  sessionTitle: {
-    fontSize: 16,
+  parkingIcon: {
+    width: 60,
+    height: 60,
+    marginRight: 20, 
+  },
+  details: {
+    flex: 1,
+  },
+  header: {
+    fontSize: 20, 
     fontWeight: 'bold',
+    color: '#6200ea',
+    marginBottom: 8,
   },
-  activeBadge: {
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 5,
-    fontSize: 12,
-  },
-  welcomeText: {
-    fontSize: 14,
-    marginTop: 5,
+  text: {
+    fontSize: 16, 
+    color: '#333',
+    marginVertical: 4,
   },
   bold: {
     fontWeight: 'bold',
+    fontSize: 16, 
+    color: '#000',
   },
-  uniqueId: {
-    color: 'blue',
-    textDecorationLine: 'underline',
+  timer: {
+    fontSize: 18, 
+    fontWeight: 'bold',
+    marginTop: 8,
   },
-  timerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  activeTime: {
+    color: '#FF5733',
+  },
+  expiredTime: {
+    color: 'red',
+  },
+
+  // Progress Bar Styling
+  progressBar: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#ddd',
+    borderRadius: 5,
+    overflow: 'hidden',
     marginTop: 10,
   },
-  timerIcon: {
-    width: 25,
-    height: 25,
-  },
-  timerText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  detailsButton: {
-    backgroundColor: 'purple',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginLeft: 'auto',
-  },
-  detailsText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  servicesHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  serviceItem: {
-    alignItems: 'center',
-    width: '33%',
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-  },
-  serviceIcon: {
-    width: 50,
-    height: 50,
-  },
-  serviceText: {
-    marginTop: 5,
-    fontSize: 12,
-    textAlign: 'center',
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#6200ea',
   },
 });
 

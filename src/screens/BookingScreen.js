@@ -13,7 +13,24 @@ const BookingScreen = () => {
     try {
       const storedBookings = await AsyncStorage.getItem('bookings');
       if (storedBookings) {
-        setBookings(JSON.parse(storedBookings));
+        let parsedBookings = JSON.parse(storedBookings);
+
+        // Sorting: Move expired bookings to the bottom
+        const now = new Date();
+        parsedBookings.sort((a, b) => {
+          const checkOutA = new Date(`1970-01-01T${a.checkOutTime}`);
+          const checkOutB = new Date(`1970-01-01T${b.checkOutTime}`);
+
+          const isExpiredA = checkOutA < now;
+          const isExpiredB = checkOutB < now;
+
+          if (isExpiredA === isExpiredB) {
+            return checkOutB - checkOutA; // Latest first
+          }
+          return isExpiredA ? 1 : -1; // Expired ones go down
+        });
+
+        setBookings(parsedBookings);
       } else {
         setBookings([]);
       }
