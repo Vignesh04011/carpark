@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
@@ -17,7 +17,10 @@ const ProfileScreen = () => {
 
         {/* Wallet Actions */}
         <View style={styles.walletActions}>
-          <TouchableOpacity style={styles.walletButton}>
+          <TouchableOpacity 
+            style={styles.walletButton} 
+            onPress={() => navigation.navigate('Wallet')}
+          >
             <Image source={require('../assets/icons/rupee.png')} style={styles.icon} />
             <Text style={styles.walletText}>₹ 0.0</Text>
             <Text style={styles.actionText}>Add Cash To Wallet</Text>
@@ -190,7 +193,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   footerImage: {
-    width: 500,  // Increased from 250
+    width: 500,  
     height: 200, 
     resizeMode: 'contain',
   },
