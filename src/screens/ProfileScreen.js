@@ -36,7 +36,11 @@ const ProfileScreen = ({ navigation }) => {
         {/* Sections */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>My Activity</Text>
-          <ProfileItem icon={require('../assets/icons/profile1.png')} text="Profile" />
+          <ProfileItem 
+            icon={require('../assets/icons/profile1.png')} 
+            text="Profile" 
+            onPress={() => navigation.navigate('UserProfile')} // Added navigation
+          />
           <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" />
           <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" />
           <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" />
@@ -67,8 +71,8 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 // Reusable Component for Profile Items
-const ProfileItem = ({ icon, text }) => (
-  <TouchableOpacity style={styles.item}>
+const ProfileItem = ({ icon, text, onPress }) => (
+  <TouchableOpacity style={styles.item} onPress={onPress}>
     <Image source={icon} style={styles.itemIcon} />
     <Text style={styles.itemText}>{text}</Text>
   </TouchableOpacity>
