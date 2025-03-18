@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking, Alert 
 } from 'react-native';
 
 const ProfileScreen = ({ navigation }) => {
-  
-  // Function to open WhatsApp group link
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    setWalletBalance(0.0);
+    setTransactions([]);
+  }, []);
+
   const openWhatsApp = () => {
     const whatsappGroupLink = 'https://chat.whatsapp.com/KXzVe0JrDeF4yx1eLyabrT';
     Linking.canOpenURL(whatsappGroupLink).then((supported) => {
@@ -17,40 +23,25 @@ const ProfileScreen = ({ navigation }) => {
     });
   };
 
-  // Function to handle logout confirmation
-  const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", onPress: () => console.log("User logged out!") } // Replace with actual logout logic
-      ]
-    );
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-        
+
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
           <View>
             <Text style={styles.userName}>Vignesh</Text>
             <Text style={styles.email}>vigneshvane200@gmail.com</Text>
-            <Text style={styles.balance}>₹ 0.0</Text>
+            <Text style={styles.balance}>₹ {walletBalance.toFixed(2)}</Text>
           </View>
         </View>
 
         {/* Wallet Actions */}
         <View style={styles.walletActions}>
-          <TouchableOpacity 
-            style={styles.walletButton} 
-            onPress={() => navigation.navigate('Wallet')}
-          >
+          <TouchableOpacity style={styles.walletButton} onPress={() => navigation.navigate('Wallet')}>
             <Image source={require('../assets/icons/rupee.png')} style={styles.icon} />
-            <Text style={styles.walletText}>₹ 0.0</Text>
+            <Text style={styles.walletText}>₹ {walletBalance.toFixed(2)}</Text>
             <Text style={styles.actionText}>Add Cash To Wallet</Text>
           </TouchableOpacity>
 
@@ -61,52 +52,46 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Sections */}
+        {/* Transactions Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>My Activity</Text>
-          <ProfileItem 
-            icon={require('../assets/icons/profile1.png')} 
-            text="Profile" 
-            onPress={() => navigation.navigate('UserProfile')}
-          />
-          <ProfileItem 
-            icon={require('../assets/icons/heart.png')} 
-            text="Wishlisted Parking" 
-            onPress={() => navigation.navigate('WishlistedParking')} 
-          />
-          <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" onPress={() => console.log("My Vehicles Info Pressed")} />
-          <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" onPress={() => console.log("My Bookings Pressed")} />
+          <Text style={styles.sectionHeader}>Recent Transactions</Text>
+          {transactions.length === 0 ? (
+            <Text style={styles.noTransactions}>No recent transactions</Text>
+          ) : (
+            transactions.map((transaction, index) => (
+              <Text key={index} style={styles.transactionItem}>{transaction}</Text>
+            ))
+          )}
         </View>
 
+        {/* My Activity Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionHeader}>Payments</Text>
-          <ProfileItem icon={require('../assets/icons/transaction.png')} text="Transactions" onPress={() => console.log("Transactions Pressed")} />
+          <Text style={styles.sectionHeader}>My Activity</Text>
+          <ProfileItem icon={require('../assets/icons/profile1.png')} text="Profile" onPress={() => navigation.navigate('UserProfile')} />
+          <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" onPress={() => navigation.navigate('WishlistedParking')} />
+          <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" onPress={() => console.log("My Vehicles Info Pressed")} />
+          <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" onPress={() => console.log("My Bookings Pressed")} />
           <ProfileItem icon={require('../assets/icons/wallet_1.jpg')} text="See Wallet" onPress={() => navigation.navigate('Wallet')} />
         </View>
 
+        {/* Others Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Others</Text>
-          <ProfileItem icon={require('../assets/icons/community.png')} text="Community" onPress={() => console.log("Community Pressed")} />
-          <ProfileItem 
-            icon={require('../assets/icons/setting.png')} 
-            text="Settings" 
-            onPress={() => navigation.navigate('Settings')} 
-          />
+          <ProfileItem icon={require('../assets/icons/setting.png')} text="Settings" onPress={() => navigation.navigate('Settings')} />
           <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={() => console.log("Rate App Pressed")} />
           <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" onPress={() => console.log("Terms & Conditions Pressed")} />
-          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={handleLogout} />
+          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={() => Alert.alert("Logout", "Are you sure you want to log out?", [{ text: "Cancel", style: "cancel" }, { text: "Logout", onPress: () => console.log("User logged out!") }])} />
         </View>
 
         {/* Footer Image */}
-        <View style={styles.footer}>
-          <Image source={require('../assets/images/footer.png')} style={styles.footerImage} />
-        </View>
+        <Image source={require('../assets/images/footer.png')} style={styles.footerImage} />
+
       </View>
     </ScrollView>
   );
 };
 
-// Reusable Component for Profile Items
+// Reusable Profile Item Component
 const ProfileItem = ({ icon, text, onPress }) => (
   <TouchableOpacity style={styles.item} onPress={onPress}>
     <Image source={icon} style={styles.itemIcon} />
@@ -117,12 +102,13 @@ const ProfileItem = ({ icon, text, onPress }) => (
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 80,
+    paddingBottom: 130,
   },
   container: {
     flex: 1,
     backgroundColor: '#F8F8F8',
     padding: 15,
+    alignItems: 'center',
   },
   profileCard: {
     backgroundColor: '#FFF',
@@ -130,12 +116,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
     elevation: 3,
     marginBottom: 15,
+    width: '100%',
   },
   logo: {
     width: 50,
@@ -159,6 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 15,
+    width: '100%',
   },
   walletButton: {
     flex: 1,
@@ -167,10 +151,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginHorizontal: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
     elevation: 3,
   },
   icon: {
@@ -187,28 +167,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#6A0DAD',
   },
-  actionTextSmall: {
-    fontSize: 12,
-    color: '#888',
-  },
   section: {
     backgroundColor: '#FFF',
     borderRadius: 12,
-    paddingVertical: 5,
+    paddingVertical: 10,
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
     elevation: 3,
+    width: '100%',
   },
   sectionHeader: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#6A0DAD',
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
   },
   item: {
     flexDirection: 'row',
@@ -223,18 +194,25 @@ const styles = StyleSheet.create({
     height: 25,
     marginRight: 10,
   },
+  noTransactionContainer: {
+    alignItems: 'center', // Center horizontally
+    justifyContent: 'center', // Center vertically
+    paddingVertical: 10, // Add some padding
+  },
+  
+  noTransactions: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center', // Ensure text is centered
+  },
   itemText: {
     fontSize: 14,
     fontWeight: '500',
   },
-  footer: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 10,
-  },
   footerImage: {
-    width: 500,  
-    height: 200, 
+    width: '90%',
+    height: 250,
+    marginTop: 20,
     resizeMode: 'contain',
   },
 });
