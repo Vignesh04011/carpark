@@ -1,54 +1,65 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 
 const ProfileScreen = () => {
   return (
-    <View style={styles.container}>
-      {/* Profile Card */}
-      <View style={styles.profileCard}>
-        <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
-        <View>
-          <Text style={styles.userName}>Vignesh</Text>
-          <Text style={styles.email}>vigneshvane200@gmail.com</Text>
-          <Text style={styles.balance}>₹ 0.0</Text>
+    <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <View style={styles.container}>
+        {/* Profile Card */}
+        <View style={styles.profileCard}>
+          <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
+          <View>
+            <Text style={styles.userName}>Vignesh</Text>
+            <Text style={styles.email}>vigneshvane200@gmail.com</Text>
+            <Text style={styles.balance}>₹ 0.0</Text>
+          </View>
+        </View>
+
+        {/* Wallet Actions */}
+        <View style={styles.walletActions}>
+          <TouchableOpacity style={styles.walletButton}>
+            <Image source={require('../assets/icons/rupee.png')} style={styles.icon} />
+            <Text style={styles.walletText}>₹ 0.0</Text>
+            <Text style={styles.actionText}>Add Cash To Wallet</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.walletButton}>
+            <Image source={require('../assets/icons/help.png')} style={styles.icon} />
+            <Text style={styles.actionText}>Get Help</Text>
+            <Text style={styles.actionTextSmall}>Solve Issue</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Sections */}
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>My Activity</Text>
+          <ProfileItem icon={require('../assets/icons/profile1.png')} text="Profile" />
+          <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" />
+          <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" />
+          <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Payments</Text>
+          <ProfileItem icon={require('../assets/icons/transaction.png')} text="Transactions" />
+          <ProfileItem icon={require('../assets/icons/wallet_1.jpg')} text="See Wallet" />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionHeader}>Others</Text>
+          <ProfileItem icon={require('../assets/icons/community.png')} text="Community" />
+          <ProfileItem icon={require('../assets/icons/setting.png')} text="Setting" />
+          <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" />
+          <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" />
+          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" />
+        </View>
+
+        {/* Footer Image */}
+        <View style={styles.footer}>
+          <Image source={require('../assets/images/footer.png')} style={styles.footerImage} />
         </View>
       </View>
-
-      {/* Wallet Actions */}
-      <View style={styles.walletActions}>
-        <TouchableOpacity style={styles.walletButton}>
-          <Image source={require('../assets/icons/rupee.png')} style={styles.icon} />
-          <Text style={styles.walletText}>₹ 0.0</Text>
-          <Text style={styles.actionText}>Add Cash To Wallet</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.walletButton}>
-          <Image source={require('../assets/icons/help.png')} style={styles.icon} />
-          <Text style={styles.actionText}>Get Help</Text>
-          <Text style={styles.actionTextSmall}>Solve Issue</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Sections */}
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>My Activity</Text>
-        <ProfileItem icon={require('../assets/icons/profile1.png')} text="Profile" />
-        <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" />
-        <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" />
-        <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Payments</Text>
-        <ProfileItem icon={require('../assets/icons/transaction.png')} text="Transactions" />
-        <ProfileItem icon={require('../assets/icons/wallet_1.jpg')} text="See Wallet" />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionHeader}>Others</Text>
-        <ProfileItem icon={require('../assets/icons/community.png')} text="Community" />
-      </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -61,6 +72,10 @@ const ProfileItem = ({ icon, text }) => (
 );
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 80, // Extra space for the bottom navigation
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8F8F8',
@@ -168,6 +183,16 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  footerImage: {
+    width: 500,  // Increased from 250
+    height: 200, 
+    resizeMode: 'contain',
   },
 });
 
