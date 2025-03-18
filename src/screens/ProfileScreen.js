@@ -69,7 +69,11 @@ const ProfileScreen = ({ navigation }) => {
             text="Profile" 
             onPress={() => navigation.navigate('UserProfile')}
           />
-          <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" onPress={() => console.log("Wishlisted Parking Pressed")} />
+          <ProfileItem 
+            icon={require('../assets/icons/heart.png')} 
+            text="Wishlisted Parking" 
+            onPress={() => navigation.navigate('WishlistedParking')} 
+          />
           <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" onPress={() => console.log("My Vehicles Info Pressed")} />
           <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" onPress={() => console.log("My Bookings Pressed")} />
         </View>
