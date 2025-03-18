@@ -8,22 +8,38 @@ import WalletScreen from '../screens/WalletScreen';
 import MapScreen from '../screens/MapScreen';
 import BookingScreen from '../screens/BookingScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import UserProfileScreen from '../screens/UserProfileScreen'; // Import the new screen
+import UserProfileScreen from '../screens/UserProfileScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Stack Navigator for Profile Section
 const ProfileStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ProfileMain" component={ProfileScreen} />
-      <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="ProfileMain" 
+        component={ProfileScreen} 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="UserProfile" 
+        component={UserProfileScreen} 
+        options={{ headerShown: true }} 
+      />
+      <Stack.Screen 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={{
+          headerTitle: '',  
+          headerBackTitleVisible: false,
+          headerTransparent: true,
+        }} 
+      />
     </Stack.Navigator>
   );
 };
 
-// Function to create tab icons
 const TabIcon = ({ source, focused }) => (
   <View style={[styles.iconContainer, focused && styles.activeTab]}>
     <Image source={source} style={styles.icon} />
@@ -68,8 +84,8 @@ const AppNavigation = () => {
           }}
         />
         <Tab.Screen 
-          name="Profile" 
-          component={ProfileStack} // Using Profile Stack Navigator
+          name="Profile"
+          component={ProfileStack}  // ✅ FIXED: Pass component directly
           options={{
             tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/profile.png')} focused={focused} />,
           }}

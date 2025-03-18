@@ -1,14 +1,32 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking } from 'react-native';
+import { 
+  View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking, Alert 
+} from 'react-native';
 
 const ProfileScreen = ({ navigation }) => {
   
-  // Function to open WhatsApp
+  // Function to open WhatsApp group link
   const openWhatsApp = () => {
-    const whatsappGroupLink = 'https://chat.whatsapp.com/KXzVe0JrDeF4yx1eLyabrT'; // Replace with your WhatsApp group link
-    Linking.openURL(whatsappGroupLink).catch(() => {
-      alert('Make sure WhatsApp is installed on your device.');
+    const whatsappGroupLink = 'https://chat.whatsapp.com/KXzVe0JrDeF4yx1eLyabrT';
+    Linking.canOpenURL(whatsappGroupLink).then((supported) => {
+      if (supported) {
+        Linking.openURL(whatsappGroupLink);
+      } else {
+        Alert.alert('Error', 'WhatsApp is not installed on your device.');
+      }
     });
+  };
+
+  // Function to handle logout confirmation
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", onPress: () => console.log("User logged out!") } // Replace with actual logout logic
+      ]
+    );
   };
 
   return (
@@ -51,24 +69,28 @@ const ProfileScreen = ({ navigation }) => {
             text="Profile" 
             onPress={() => navigation.navigate('UserProfile')}
           />
-          <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" />
-          <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" />
-          <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" />
+          <ProfileItem icon={require('../assets/icons/heart.png')} text="Wishlisted Parking" onPress={() => console.log("Wishlisted Parking Pressed")} />
+          <ProfileItem icon={require('../assets/icons/car_icon.jpg')} text="My Vehicles Info" onPress={() => console.log("My Vehicles Info Pressed")} />
+          <ProfileItem icon={require('../assets/icons/booking.png')} text="My Bookings" onPress={() => console.log("My Bookings Pressed")} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Payments</Text>
-          <ProfileItem icon={require('../assets/icons/transaction.png')} text="Transactions" />
-          <ProfileItem icon={require('../assets/icons/wallet_1.jpg')} text="See Wallet" />
+          <ProfileItem icon={require('../assets/icons/transaction.png')} text="Transactions" onPress={() => console.log("Transactions Pressed")} />
+          <ProfileItem icon={require('../assets/icons/wallet_1.jpg')} text="See Wallet" onPress={() => navigation.navigate('Wallet')} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Others</Text>
-          <ProfileItem icon={require('../assets/icons/community.png')} text="Community" />
-          <ProfileItem icon={require('../assets/icons/setting.png')} text="Setting" />
-          <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" />
-          <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" />
-          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" />
+          <ProfileItem icon={require('../assets/icons/community.png')} text="Community" onPress={() => console.log("Community Pressed")} />
+          <ProfileItem 
+            icon={require('../assets/icons/setting.png')} 
+            text="Settings" 
+            onPress={() => navigation.navigate('Settings')} 
+          />
+          <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={() => console.log("Rate App Pressed")} />
+          <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" onPress={() => console.log("Terms & Conditions Pressed")} />
+          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={handleLogout} />
         </View>
 
         {/* Footer Image */}
