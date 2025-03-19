@@ -15,21 +15,23 @@ import ProfileScreen from '../screens/ProfileScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
+import ConfirmBookingScreen from '../screens/ConfirmBookingScreen';
 
-// Create Authentication Context
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
-// Auth Provider
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Stores user info or token
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check AsyncStorage for stored user
     const loadUser = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      try {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (error) {
+        console.error('Error loading user from storage:', error);
       }
     };
     loadUser();
@@ -37,12 +39,12 @@ const AuthProvider = ({ children }) => {
 
   const login = async (userData) => {
     setUser(userData);
-    await AsyncStorage.setItem('user', JSON.stringify(userData)); // Save user
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = async () => {
     setUser(null);
-    await AsyncStorage.removeItem('user'); // Remove user
+    await AsyncStorage.removeItem('user');
   };
 
   return (
@@ -54,6 +56,7 @@ const AuthProvider = ({ children }) => {
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+const MainStack = createStackNavigator();
 
 const ProfileStack = () => (
   <Stack.Navigator>
@@ -94,11 +97,19 @@ const MainTabs = () => (
   </Tab.Navigator>
 );
 
+const MainStackNavigator = () => (
+  <MainStack.Navigator screenOptions={{ headerShown: false }}>
+    <MainStack.Screen name="MainTabs" component={MainTabs} />
+    <MainStack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
+    <MainStack.Screen name="Bookings" component={BookingScreen} />
+  </MainStack.Navigator>
+);
+
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Register" component={RegistrationScreen} />
-    <Stack.Screen name="Main" component={MainTabs} options={{ gestureEnabled: false }} />
+    <Stack.Screen name="Main" component={MainStackNavigator} options={{ gestureEnabled: false }} />
   </Stack.Navigator>
 );
 
@@ -109,7 +120,7 @@ const AppNavigation = () => {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="Main" component={MainStackNavigator} />
         ) : (
           <>
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -145,7 +156,6 @@ const styles = StyleSheet.create({
   },
 });
 
-// Wrap with AuthProvider
 export default function App() {
   return (
     <AuthProvider>
