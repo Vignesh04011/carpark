@@ -1,48 +1,51 @@
 import React, { useState } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert 
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { RadioButton } from "react-native-paper";
 
 const RegisterScreen = ({ navigation }) => {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [userType, setUserType] = useState("normal");
 
-  // ✅ Handle Registration
-  const handleRegister = async () => {
-    try {
-      const storedEmail = await AsyncStorage.getItem("email");
-
-      if (storedEmail === email) {
-        Alert.alert("Error", "User already exists. Please log in!");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        Alert.alert("Error", "Passwords do not match!");
-        return;
-      }
-
-      // ✅ Save credentials in AsyncStorage
-      await AsyncStorage.setItem("email", email);
-      await AsyncStorage.setItem("password", password);
-
-      Alert.alert("Success", "Registration successful! Please log in.");
-      navigation.replace("Login");
-    } catch (error) {
-      console.log("Registration Error:", error);
-      Alert.alert("Error", "Something went wrong. Try again!");
+  const handleRegister = () => {
+    if (!username || !email || !phone || !password) {
+      alert("Please fill all fields correctly");
+      return;
     }
+    console.log("Registering:", username, email, phone, password);
+    navigation.replace("Main");
   };
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <Text style={styles.logo}>Car <Text style={{ color: "#613EEA" }}>Park</Text></Text>
-      <Text style={styles.title}>Register</Text>
+      {/* Logo image */}
+      <Image source={require("../assets/images/app_logo.png")} style={styles.logo} />
 
-      {/* Input Fields */}
+      <View style={styles.radioContainer}>
+        <RadioButton.Group onValueChange={value => setUserType(value)} value={userType}>
+          <View style={styles.radioOption}>
+            <RadioButton value="normal" color="#613EEA" />
+            <Text style={styles.radioText}>Normal User</Text>
+          </View>
+          <View style={styles.radioOption}>
+            <RadioButton value="owner" color="#613EEA" />
+            <Text style={styles.radioText}>Space Owner</Text>
+          </View>
+        </RadioButton.Group>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Image source={require("../assets/icons/user.png")} style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+        />
+      </View>
+
       <View style={styles.inputContainer}>
         <Image source={require("../assets/icons/email.png")} style={styles.icon} />
         <TextInput
@@ -51,6 +54,17 @@ const RegisterScreen = ({ navigation }) => {
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Image source={require("../assets/icons/phone.png")} style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone Number"
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
         />
       </View>
 
@@ -65,25 +79,12 @@ const RegisterScreen = ({ navigation }) => {
         />
       </View>
 
-      <View style={styles.inputContainer}>
-        <Image source={require("../assets/icons/lock.png")} style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-      </View>
-
-      {/* Register Button */}
       <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
 
-      {/* Login Link */}
-      <Text style={styles.loginText}>
-        Already have an account? <Text style={styles.loginLink} onPress={() => navigation.navigate("Login")}>Login</Text>
+      <Text style={styles.registerText}>
+        Already have an account? <Text style={styles.registerLink} onPress={() => navigation.navigate("Login")}>Login</Text>.
       </Text>
     </View>
   );
@@ -91,15 +92,18 @@ const RegisterScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#fff" },
-  logo: { fontSize: 28, fontWeight: "bold", marginBottom: 10 },
-  title: { fontSize: 22, fontWeight: "bold", color: "#613EEA", marginBottom: 20 },
-  inputContainer: { flexDirection: "row", alignItems: "center", width: "100%", borderWidth: 1, borderColor: "#ccc", borderRadius: 10, marginBottom: 15, paddingHorizontal: 10 },
-  icon: { width: 20, height: 20, marginRight: 10 },
-  input: { flex: 1, height: 50 },
-  button: { width: "100%", height: 50, backgroundColor: "#613EEA", justifyContent: "center", alignItems: "center", borderRadius: 10 },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  loginText: { marginTop: 10, fontSize: 14 },
-  loginLink: { color: "#613EEA", fontWeight: "bold" },
+  logo: {width: 150, height: 150, resizeMode: 'contain', marginBottom: 15 },
+  title: { fontSize: 24, fontWeight: "bold", color: "#613EEA", marginBottom: 25 },
+  radioContainer: { flexDirection: "row", alignItems: "center", marginBottom: 20, backgroundColor: "#fff", padding: 15, borderRadius: 20 },
+  radioOption: { flexDirection: "row", alignItems: "center", marginRight: 20 },
+  radioText: { fontSize: 16, fontWeight: "500" },
+  inputContainer: { flexDirection: "row", alignItems: "center", width: "100%", borderWidth: 1, borderColor: "#bbb", borderRadius: 20, backgroundColor: "#fff", marginBottom: 15, paddingHorizontal: 15 },
+  icon: { width: 28, height: 28, marginRight: 12 },
+  input: { flex: 1, height: 55, fontSize: 17, color: "#2c3e50" },
+  button: { width: "100%", height: 55, backgroundColor: "#613EEA", justifyContent: "center", alignItems: "center", borderRadius: 20 },
+  buttonText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
+  registerText: { marginTop: 12, fontSize: 15, color: "#2c3e50" },
+  registerLink: { color: "#613EEA", fontWeight: "bold" },
 });
 
 export default RegisterScreen;

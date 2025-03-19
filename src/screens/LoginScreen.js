@@ -1,51 +1,38 @@
-import React, { useState, useEffect } from "react";
-import { 
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert 
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { RadioButton } from "react-native-paper";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("normal");
 
-  useEffect(() => {
-    checkLoggedInUser();
-  }, []);
-
-  // ✅ Check if user is already logged in
-  const checkLoggedInUser = async () => {
-    const storedEmail = await AsyncStorage.getItem("email");
-    if (storedEmail) {
-      navigation.replace("Main");  // Redirect to the main app
-    }
-  };
-
-  // ✅ Handle Login
+  // Handle login with validation
   const handleLogin = async () => {
-    try {
-      const storedEmail = await AsyncStorage.getItem("email");
-      const storedPassword = await AsyncStorage.getItem("password");
+    // Validate email and password
+    if (!email || !password) {
+      alert("Please enter both email and password");
+      return;
+    }
 
-      if (email === storedEmail && password === storedPassword) {
-        Alert.alert("Success", "Login Successful!");
-        await AsyncStorage.setItem("isLoggedIn", "true");
-        navigation.replace("Main");  // Navigate to the main app
-      } else {
-        Alert.alert("Error", "Invalid Email or Password!");
-      }
-    } catch (error) {
-      console.log("Login Error:", error);
-      Alert.alert("Error", "Something went wrong. Try again!");
+    // Fetch stored credentials from AsyncStorage
+    const storedEmail = await AsyncStorage.getItem('email');
+    const storedPassword = await AsyncStorage.getItem('password');
+
+    // Validate the entered credentials against stored values
+    if (email === storedEmail && password === storedPassword) {
+      console.log("Logged in successfully");
+      navigation.replace("Main"); // Navigate to the Main screen
+    } else {
+      alert("Invalid credentials, please try again.");
     }
   };
 
   return (
     <View style={styles.container}>
       {/* Logo */}
-      <Text style={styles.logo}>Car <Text style={{ color: "#613EEA" }}>Park</Text></Text>
-      <Text style={styles.title}>Login</Text>
+      <Image source={require("../assets/images/app_logo.png")} style={styles.logo} />
 
       {/* User Type Selection */}
       <View style={styles.radioContainer}>
@@ -61,7 +48,7 @@ const LoginScreen = ({ navigation }) => {
         </RadioButton.Group>
       </View>
 
-      {/* Input Fields */}
+      {/* Email Input */}
       <View style={styles.inputContainer}>
         <Image source={require("../assets/icons/email.png")} style={styles.icon} />
         <TextInput
@@ -73,6 +60,7 @@ const LoginScreen = ({ navigation }) => {
         />
       </View>
 
+      {/* Password Input */}
       <View style={styles.inputContainer}>
         <Image source={require("../assets/icons/lock.png")} style={styles.icon} />
         <TextInput
@@ -91,7 +79,9 @@ const LoginScreen = ({ navigation }) => {
 
       {/* Register Link */}
       <Text style={styles.registerText}>
-        If not signed in, <Text style={styles.registerLink} onPress={() => navigation.navigate("Register")}>then register</Text>.
+        Don't have an account? <Text style={styles.registerLink} onPress={() => navigation.navigate("Register")}>
+          Register
+        </Text>.
       </Text>
     </View>
   );
@@ -99,17 +89,17 @@ const LoginScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#fff" },
-  logo: { fontSize: 28, fontWeight: "bold", marginBottom: 10 },
-  title: { fontSize: 22, fontWeight: "bold", color: "#613EEA", marginBottom: 20 },
-  radioContainer: { flexDirection: "row", alignItems: "center", marginBottom: 20 },
-  radioOption: { flexDirection: "row", alignItems: "center", marginRight: 15 },
-  radioText: { fontSize: 16 },
-  inputContainer: { flexDirection: "row", alignItems: "center", width: "100%", borderWidth: 1, borderColor: "#ccc", borderRadius: 10, marginBottom: 15, paddingHorizontal: 10 },
-  icon: { width: 20, height: 20, marginRight: 10 },
-  input: { flex: 1, height: 50 },
-  button: { width: "100%", height: 50, backgroundColor: "#613EEA", justifyContent: "center", alignItems: "center", borderRadius: 10 },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  registerText: { marginTop: 10, fontSize: 14 },
+  logo: { width: 120, height: 120, resizeMode: 'contain', marginBottom: 15 },
+  title: { fontSize: 24, fontWeight: "bold", color: "#613EEA", marginBottom: 25 },
+  radioContainer: { flexDirection: "row", alignItems: "center", marginBottom: 20, backgroundColor: "#fff", padding: 15, borderRadius: 20 },
+  radioOption: { flexDirection: "row", alignItems: "center", marginRight: 20 },
+  radioText: { fontSize: 16, fontWeight: "500" },
+  inputContainer: { flexDirection: "row", alignItems: "center", width: "100%", borderWidth: 1, borderColor: "#bbb", borderRadius: 20, backgroundColor: "#fff", marginBottom: 15, paddingHorizontal: 15 },
+  icon: { width: 28, height: 28, marginRight: 12 },
+  input: { flex: 1, height: 55, fontSize: 17, color: "#2c3e50" },
+  button: { width: "100%", height: 55, backgroundColor: "#613EEA", justifyContent: "center", alignItems: "center", borderRadius: 20 },
+  buttonText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
+  registerText: { marginTop: 12, fontSize: 15, color: "#2c3e50" },
   registerLink: { color: "#613EEA", fontWeight: "bold" },
 });
 
