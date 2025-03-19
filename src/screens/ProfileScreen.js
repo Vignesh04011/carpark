@@ -92,7 +92,7 @@ const ProfileScreen = ({ navigation }) => {
           <ProfileItem icon={require('../assets/icons/setting.png')} text="Settings" onPress={() => navigation.navigate('Settings')} />
           <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={() => console.log("Rate App Pressed")} />
           <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" onPress={() => console.log("Terms & Conditions Pressed")} />
-          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={() => Alert.alert("Logout", "Are you sure you want to log out?", [{ text: "Cancel", style: "cancel" }, { text: "Logout", onPress: () => console.log("User logged out!") }])} />
+          
         </View>
 
         {/* Footer Image */}
