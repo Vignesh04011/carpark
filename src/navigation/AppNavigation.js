@@ -1,5 +1,6 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
@@ -15,23 +16,45 @@ import UserProfileScreen from '../screens/UserProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
 
-// Wallet Context
-const WalletContext = createContext();
-export const useWallet = () => useContext(WalletContext);
+// Create Authentication Context
+const AuthContext = createContext();
+export const useAuth = () => useContext(AuthContext);
 
-const WalletProvider = ({ children }) => {
-  const [walletBalance, setWalletBalance] = useState(0);
+// Auth Provider
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null); // Stores user info or token
+
+  useEffect(() => {
+    // Check AsyncStorage for stored user
+    const loadUser = async () => {
+      const storedUser = await AsyncStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    };
+    loadUser();
+  }, []);
+
+  const login = async (userData) => {
+    setUser(userData);
+    await AsyncStorage.setItem('user', JSON.stringify(userData)); // Save user
+  };
+
+  const logout = async () => {
+    setUser(null);
+    await AsyncStorage.removeItem('user'); // Remove user
+  };
+
   return (
-    <WalletContext.Provider value={{ walletBalance, setWalletBalance }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
-    </WalletContext.Provider>
+    </AuthContext.Provider>
   );
 };
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Profile Stack
 const ProfileStack = () => (
   <Stack.Navigator>
     <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
@@ -41,68 +64,36 @@ const ProfileStack = () => (
   </Stack.Navigator>
 );
 
-// Custom Tab Icons
 const tabBarIcon = (icon) => ({ focused }) => (
-  <Image
-    source={icon}
-    style={{ width: 60, height: 60, tintColor: focused ? '#00008B' : '#D3D3D3' }}
-  />
+  <View style={styles.iconContainer}>
+    <Image
+      source={icon}
+      style={{
+        width: 50,
+        height: 50,
+        bottom: -20,
+        tintColor: focused ? '#4A90E2' : '#B0B0B0',
+      }}
+    />
+  </View>
 );
 
-// Custom Tab Bar
-const CustomTabBarStyle = {
-  position: 'absolute',
-  bottom: 10,
-  left: 20,
-  right: 20,
-  backgroundColor: 'white',
-  borderRadius: 30,
-  height: 70,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 10 },
-  shadowOpacity: 0.25,
-  shadowRadius: 10,
-  elevation: 5,
-};
-
-// Main Tab Navigator
 const MainTabs = () => (
   <Tab.Navigator
     screenOptions={{
       headerShown: false,
-      tabBarStyle: CustomTabBarStyle,
+      tabBarStyle: styles.tabBar,
       tabBarShowLabel: false,
     }}
   >
-    <Tab.Screen 
-      name="Home" 
-      component={HomeScreen} 
-      options={{ tabBarIcon: tabBarIcon(require('../assets/icons/home.png')) }} 
-    />
-    <Tab.Screen 
-      name="Wallet" 
-      component={WalletScreen} 
-      options={{ tabBarIcon: tabBarIcon(require('../assets/icons/wallet.png')) }} 
-    />
-    <Tab.Screen 
-      name="Map" 
-      component={MapScreen} 
-      options={{ tabBarIcon: tabBarIcon(require('../assets/icons/map.png')) }} 
-    />
-    <Tab.Screen 
-      name="Bookings" 
-      component={BookingScreen} 
-      options={{ tabBarIcon: tabBarIcon(require('../assets/icons/bookings.png')) }} 
-    />
-    <Tab.Screen 
-      name="Profile" 
-      component={ProfileStack} 
-      options={{ tabBarIcon: tabBarIcon(require('../assets/icons/profile.png')) }} 
-    />
+    <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/home.png')) }} />
+    <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/wallet.png')) }} />
+    <Tab.Screen name="Map" component={MapScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/map.png')) }} />
+    <Tab.Screen name="Bookings" component={BookingScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/bookings.png')) }} />
+    <Tab.Screen name="Profile" component={ProfileStack} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/profile.png')) }} />
   </Tab.Navigator>
 );
 
-// Auth Stack (Login + Register)
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Login" component={LoginScreen} />
@@ -111,18 +102,54 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// Main Navigation Stack
 const AppNavigation = () => {
+  const { user } = useAuth();
+
   return (
-    <WalletProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Welcome" component={WelcomeScreen} />
-          <Stack.Screen name="Auth" component={AuthStack} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </WalletProvider>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {user ? (
+          <Stack.Screen name="Main" component={MainTabs} />
+        ) : (
+          <>
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Auth" component={AuthStack} />
+          </>
+        )}
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 
-export default AppNavigation;
+const styles = StyleSheet.create({
+  tabBar: {
+    position: 'absolute',
+    bottom: 10,
+    left: 20,
+    right: 20,
+    elevation: 10,
+    backgroundColor: 'white',
+    borderRadius: 25,
+    height: 75,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+});
+
+// Wrap with AuthProvider
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppNavigation />
+    </AuthProvider>
+  );
+}
