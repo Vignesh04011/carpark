@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createContext, useState, useContext } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { NavigationContainer } from '@react-navigation/native';
@@ -13,64 +13,45 @@ import UserProfileScreen from '../screens/UserProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
 
+// Create Wallet Context
+const WalletContext = createContext();
+export const useWallet = () => useContext(WalletContext);
+
+const WalletProvider = ({ children }) => {
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  return (
+    <WalletContext.Provider value={{ walletBalance, setWalletBalance }}>
+      {children}
+    </WalletContext.Provider>
+  );
+};
+
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-/** ✅ Updated Profile Stack */
-const ProfileStack = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="ProfileMain" 
-        component={ProfileScreen} 
-        options={{ headerShown: false }} 
-      />
-      <Stack.Screen 
-        name="WishlistedParking" 
-        component={WishlistedParkingScreen} 
-        options={{ headerTitle: 'Wishlisted Parking' }} 
-      />
-      <Stack.Screen 
-        name="UserProfile" 
-        component={UserProfileScreen} 
-        options={{ headerShown: true }} 
-      />
-      <Stack.Screen 
-        name="Settings" 
-        component={SettingsScreen} 
-        options={{
-          headerTitle: '',  
-          headerBackTitleVisible: false,
-          headerTransparent: true,
-        }} 
-      />
-      {/* ✅ Added ConfirmBooking here so it works from Wishlisted Parking */}
-      <Stack.Screen 
-        name="ConfirmBooking" 
-        component={ConfirmBookingScreen} 
-        options={{ headerTitle: 'Confirm Booking' }} 
-      />
-    </Stack.Navigator>
-  );
-};
+const ProfileStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen name="ProfileMain" component={ProfileScreen} options={{ headerShown: false }} />
+    <Stack.Screen name="WishlistedParking" component={WishlistedParkingScreen} options={{ headerTitle: 'Wishlisted Parking' }} />
+    <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ headerShown: true }} />
+    <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerTransparent: true }} />
+    <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} options={{ headerTitle: 'Confirm Booking' }} />
+  </Stack.Navigator>
+);
 
-/** ✅ Map Stack (Still needed) */
-const MapStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MapMain" component={MapScreen} />
-      <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
-    </Stack.Navigator>
-  );
-};
+const MapStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="MapMain" component={MapScreen} />
+    <Stack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
+  </Stack.Navigator>
+);
 
-const BookingStack = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="BookingsMain" component={BookingScreen} />
-    </Stack.Navigator>
-  );
-};
+const BookingStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="BookingsMain" component={BookingScreen} />
+  </Stack.Navigator>
+);
 
 const TabIcon = ({ source, focused }) => (
   <View style={[styles.iconContainer, focused && styles.activeTab]}>
@@ -80,50 +61,52 @@ const TabIcon = ({ source, focused }) => (
 
 const AppNavigation = () => {
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarStyle: styles.navBar,
-        }}>
-        <Tab.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/home.png')} focused={focused} />,
-          }}
-        />
-        <Tab.Screen 
-          name="Wallet" 
-          component={WalletScreen} 
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/wallet.png')} focused={focused} />,
-          }}
-        />
-        <Tab.Screen 
-          name="Map" 
-          component={MapStack} 
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/map.png')} focused={focused} />,
-          }}
-        />
-        <Tab.Screen 
-          name="Bookings" 
-          component={BookingStack} 
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/bookings.png')} focused={focused} />,
-          }}
-        />
-        <Tab.Screen 
-          name="Profile"
-          component={ProfileStack}  
-          options={{
-            tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/profile.png')} focused={focused} />,
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <WalletProvider>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarShowLabel: false,
+            tabBarStyle: styles.navBar,
+          }}>
+          <Tab.Screen 
+            name="Home" 
+            component={HomeScreen} 
+            options={{
+              tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/home.png')} focused={focused} />,
+            }}
+          />
+          <Tab.Screen 
+            name="Wallet" 
+            component={WalletScreen} 
+            options={{
+              tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/wallet.png')} focused={focused} />,
+            }}
+          />
+          <Tab.Screen 
+            name="Map" 
+            component={MapStack} 
+            options={{
+              tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/map.png')} focused={focused} />,
+            }}
+          />
+          <Tab.Screen 
+            name="Bookings" 
+            component={BookingStack} 
+            options={{
+              tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/bookings.png')} focused={focused} />,
+            }}
+          />
+          <Tab.Screen 
+            name="Profile"
+            component={ProfileStack}  
+            options={{
+              tabBarIcon: ({ focused }) => <TabIcon source={require('../assets/icons/profile.png')} focused={focused} />,
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </WalletProvider>
   );
 };
 

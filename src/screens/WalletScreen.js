@@ -3,7 +3,6 @@ import {
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Alert 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const WalletScreen = ({ navigation }) => {
@@ -22,52 +21,31 @@ const WalletScreen = ({ navigation }) => {
     fetchData();
   }, []);
 
-  const handlePayment = async () => {
+  const handleFakeTransaction = async () => {
     const enteredAmount = parseFloat(amount);
     if (isNaN(enteredAmount) || enteredAmount <= 0) {
       Alert.alert('Invalid Amount', 'Please enter a valid amount.');
       return;
     }
 
-    const options = {
-      description: 'Wallet Top-Up',
-      currency: 'INR',
-      amount: enteredAmount * 100,
-      key: 'your_razorpay_api_key', 
-      name: 'Parking App',
-      prefill: {
-        email: 'vigneshvane200@gmail.com',
-        contact: '9999999999',
-        name: 'Vignesh',
-      },
-      theme: { color: '#6A0DAD' },
+    const newBalance = balance + enteredAmount;
+    const newTransaction = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleString(),
+      type: 'Credit',
+      amount: `₹${enteredAmount.toFixed(2)}`,
+      note: 'Fake Wallet Top-Up',
     };
 
-    RazorpayCheckout.open(options)
-      .then(async (data) => {
-        Alert.alert('Payment Successful', `Transaction ID: ${data.razorpay_payment_id}`);
+    const updatedHistory = [newTransaction, ...walletHistory];
 
-        const newBalance = balance + enteredAmount;
-        const newTransaction = {
-          id: Date.now().toString(),
-          date: new Date().toLocaleDateString(),
-          type: 'Credit',
-          amount: `₹${enteredAmount.toFixed(2)}`,
-          note: 'Wallet Top-Up',
-        };
+    await AsyncStorage.setItem('walletBalance', newBalance.toString());
+    await AsyncStorage.setItem('walletHistory', JSON.stringify(updatedHistory));
 
-        const updatedHistory = [newTransaction, ...walletHistory];
-
-        await AsyncStorage.setItem('walletBalance', newBalance.toString());
-        await AsyncStorage.setItem('walletHistory', JSON.stringify(updatedHistory));
-
-        setBalance(newBalance);
-        setWalletHistory(updatedHistory);
-        setAmount('');
-      })
-      .catch((error) => {
-        Alert.alert('Payment Failed', error.description);
-      });
+    setBalance(newBalance);
+    setWalletHistory(updatedHistory);
+    setAmount('');
+    Alert.alert('Transaction Successful', `₹${enteredAmount.toFixed(2)} added to your wallet.`);
   };
 
   return (
@@ -91,8 +69,8 @@ const WalletScreen = ({ navigation }) => {
         onChangeText={setAmount}
       />
 
-      {/* Make Payment Button */}
-      <TouchableOpacity style={styles.paymentButton} onPress={handlePayment}>
+      {/* Fake Payment Button */}
+      <TouchableOpacity style={styles.paymentButton} onPress={handleFakeTransaction}>
         <Text style={styles.paymentButtonText}>Add Money</Text>
       </TouchableOpacity>
 

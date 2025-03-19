@@ -2,15 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { 
   View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking, Alert 
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ProfileScreen = ({ navigation }) => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
 
-  useEffect(() => {
-    setWalletBalance(0.0);
-    setTransactions([]);
-  }, []);
+  // Fetch wallet balance when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchWalletBalance = async () => {
+        try {
+          const balance = await AsyncStorage.getItem('walletBalance');
+          setWalletBalance(balance ? parseFloat(balance) : 0);
+        } catch (error) {
+          console.log("Error fetching wallet balance", error);
+        }
+      };
+      fetchWalletBalance();
+    }, [])
+  );
 
   const openWhatsApp = () => {
     const whatsappGroupLink = 'https://chat.whatsapp.com/KXzVe0JrDeF4yx1eLyabrT';
@@ -181,6 +193,11 @@ const styles = StyleSheet.create({
     color: '#6A0DAD',
     padding: 10,
   },
+  noTransactions: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+  },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -193,17 +210,6 @@ const styles = StyleSheet.create({
     width: 25,
     height: 25,
     marginRight: 10,
-  },
-  noTransactionContainer: {
-    alignItems: 'center', // Center horizontally
-    justifyContent: 'center', // Center vertically
-    paddingVertical: 10, // Add some padding
-  },
-  
-  noTransactions: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center', // Ensure text is centered
   },
   itemText: {
     fontSize: 14,
