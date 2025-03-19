@@ -4,10 +4,12 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../navigation/AppNavigation';
 
 const ProfileScreen = ({ navigation }) => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
+  const { logout } = useAuth();  
 
   // Fetch wallet balance when screen is focused
   useFocusEffect(
@@ -33,6 +35,21 @@ const ProfileScreen = ({ navigation }) => {
         Alert.alert('Error', 'WhatsApp is not installed on your device.');
       }
     });
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", onPress: async () => {
+            await logout();
+            navigation.replace("Login");
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -92,11 +109,8 @@ const ProfileScreen = ({ navigation }) => {
           <ProfileItem icon={require('../assets/icons/setting.png')} text="Settings" onPress={() => navigation.navigate('Settings')} />
           <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={() => console.log("Rate App Pressed")} />
           <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" onPress={() => console.log("Terms & Conditions Pressed")} />
-          
+          <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={handleLogout} />
         </View>
-
-        {/* Footer Image */}
-        <Image source={require('../assets/images/footer.png')} style={styles.footerImage} />
 
       </View>
     </ScrollView>
@@ -114,7 +128,7 @@ const ProfileItem = ({ icon, text, onPress }) => (
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 130,
+    paddingBottom: 100,
   },
   container: {
     flex: 1,
@@ -153,31 +167,26 @@ const styles = StyleSheet.create({
   walletActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 15,
     width: '100%',
+    marginBottom: 15,
   },
   walletButton: {
-    flex: 1,
     backgroundColor: '#FFF',
-    padding: 15,
-    borderRadius: 12,
+    flex: 1,
     alignItems: 'center',
-    marginHorizontal: 5,
+    padding: 10,
+    borderRadius: 12,
     elevation: 3,
+    marginHorizontal: 5,
   },
   icon: {
-    width: 30,
-    height: 30,
+    width: 25,
+    height: 25,
     marginBottom: 5,
-  },
-  walletText: {
-    fontSize: 16,
-    fontWeight: 'bold',
   },
   actionText: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#6A0DAD',
+    fontWeight: '500',
   },
   section: {
     backgroundColor: '#FFF',
@@ -192,11 +201,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#6A0DAD',
     padding: 10,
-  },
-  noTransactions: {
-    fontSize: 14,
-    color: '#888',
-    textAlign: 'center',
   },
   item: {
     flexDirection: 'row',
@@ -214,12 +218,6 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  footerImage: {
-    width: '90%',
-    height: 250,
-    marginTop: 20,
-    resizeMode: 'contain',
   },
 });
 
