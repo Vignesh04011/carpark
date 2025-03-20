@@ -89,10 +89,10 @@ const HomeScreen = () => {
 
       {/* Subscription Button */}
       <TouchableOpacity 
-  style={styles.subscriptionButton} 
-  onPress={() => navigation.navigate('Subscription')}>
-  <Text style={styles.subscriptionText}>Subscribe Now</Text>
-</TouchableOpacity>
+        style={styles.subscriptionButton} 
+        onPress={() => navigation.navigate('Subscription')}>
+        <Text style={styles.subscriptionText}>Subscribe Now</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };

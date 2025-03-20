@@ -17,7 +17,6 @@ import SettingsScreen from '../screens/SettingsScreen';
 import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
 import ConfirmBookingScreen from '../screens/ConfirmBookingScreen';
 import RateAppScreen from '../screens/RateAppScreen';
-import SplashScreen from '../screens/SplashScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 
 const AuthContext = createContext();
@@ -29,7 +28,7 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem('userData'); // Fetch userData instead of 'user'
+        const storedUser = await AsyncStorage.getItem('user');
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
@@ -42,12 +41,12 @@ const AuthProvider = ({ children }) => {
 
   const login = async (userData) => {
     setUser(userData);
-    await AsyncStorage.setItem('userData', JSON.stringify(userData)); // Store userData
+    await AsyncStorage.setItem('user', JSON.stringify(userData));
   };
 
   const logout = async () => {
     setUser(null);
-    await AsyncStorage.removeItem('userData'); // Remove userData
+    await AsyncStorage.removeItem('user');
   };
 
   return (
@@ -97,20 +96,16 @@ const MainTabs = () => (
     <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/wallet.png')) }} />
     <Tab.Screen name="Map" component={MapScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/map.png')) }} />
     <Tab.Screen name="Bookings" component={BookingScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/bookings.png')) }} />
-    <Tab.Screen 
-      name="Profile" 
-      component={() => <ProfileStack />} // ✅ FIXED: Wrapped ProfileStack
-      options={{ tabBarIcon: tabBarIcon(require('../assets/icons/profile.png')) }} 
-    />
+    <Tab.Screen name="Profile" component={ProfileStack} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/profile.png')) }} />
   </Tab.Navigator>
 );
 
 const MainStackNavigator = () => (
   <MainStack.Navigator screenOptions={{ headerShown: false }}>
     <MainStack.Screen name="MainTabs" component={MainTabs} />
+    <MainStack.Screen name="Subscription" component={SubscriptionScreen} />
     <MainStack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
     <MainStack.Screen name="Bookings" component={BookingScreen} />
-    <MainStack.Screen name="Subscription" component={SubscriptionScreen} />  
   </MainStack.Navigator>
 );
 
@@ -132,7 +127,6 @@ const AppNavigation = () => {
           <Stack.Screen name="Main" component={MainStackNavigator} />
         ) : (
           <>
-            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Auth" component={AuthStack} />
           </>
