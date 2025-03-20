@@ -18,6 +18,7 @@ import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
 import ConfirmBookingScreen from '../screens/ConfirmBookingScreen';
 import RateAppScreen from '../screens/RateAppScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
+import SplashScreen from '../screens/SplashScreen';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -123,13 +124,14 @@ const AppNavigation = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="Main" component={MainStackNavigator} />
-        ) : (
+        {!user ? (
           <>
+            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Auth" component={AuthStack} />
           </>
+        ) : (
+          <Stack.Screen name="Main" component={MainStackNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

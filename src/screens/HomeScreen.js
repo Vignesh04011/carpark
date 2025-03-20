@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 20,
     marginHorizontal: 15,
-    marginTop:15,
+    marginTop: 35,
     borderRadius: 20,
     shadowColor: '#000',
     shadowOpacity: 0.2,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     borderRadius: 45,
     overflow: 'hidden',
     elevation: 10,
-    marginBottom: 90,
+    marginBottom: 80,
   },
   buttonText: {
     color: '#fff',
