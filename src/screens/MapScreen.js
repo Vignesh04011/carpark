@@ -21,9 +21,10 @@ const MapScreen = () => {
   // Parking spots data
   const parkingSpots = [
     { id: 1, latitude: 18.8211, longitude: 73.2705, booked: true, name: "Parking A", address: "Sector 44A, Chembur, Mumbai", spaces: 0, price: 80, rating: 4.5, image: require('../assets/images/ParkingA.png') },
-    { id: 2, latitude: 18.8205, longitude: 73.2720, booked: false, name: "Parking B", address: "Main Street, Khalapur", spaces: 50, price: 100, rating: 3.8, image: require('../assets/images/ParkingB.png') },
-    { id: 3, latitude: 18.8199, longitude: 73.2715, booked: false, name: "Parking C", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
+    { id: 2, latitude: 18.8205, longitude: 73.2720, booked: false, name: "Corporate Parking", address: "Main Street, Khalapur", spaces: 50, price: 100, rating: 3.8, image: require('../assets/images/ParkingB.png') },
+    { id: 3, latitude: 18.8199, longitude: 73.2715, booked: false, name: "Apartment Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
     { id: 4, latitude: 18.8220, longitude: 73.2708, booked: true, name: "Parking D", address: "Near Mall, Khalapur", spaces: 0, price: 90, rating: 3.5, image: require('../assets/images/ParkingB.png') },
+    { id: 5, latitude: 18.8222, longitude: 73.2723, booked: false, name: "Private Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
   ];
 
   // Fetch wishlisted items from AsyncStorage
@@ -89,14 +90,16 @@ const MapScreen = () => {
                 <Text style={styles.detail}>Rating: ⭐ {selectedSpot.rating}</Text>
 
                 <View style={styles.buttonContainer}>
-                  {/* Book Slot Button (Disabled if fully booked) */}
-                  <TouchableOpacity
-                    style={[styles.bookButton, selectedSpot.booked && styles.disabledButton]}
-                    onPress={handleBookSlot}
-                    disabled={selectedSpot.booked}
-                  >
-                    <Text style={styles.bookText}>{selectedSpot.booked ? "Fully Booked" : "Book the Slot"}</Text>
-                  </TouchableOpacity>
+                  {selectedSpot.booked ? (
+                    <Text style={styles.soldOutText}>Sold Out</Text>
+                  ) : (
+                    <TouchableOpacity
+                      style={styles.bookButton}
+                      onPress={handleBookSlot}
+                    >
+                      <Text style={styles.bookText}>Book the Slot</Text>
+                    </TouchableOpacity>
+                  )}
 
                   {/* Wishlist Button */}
                   <TouchableOpacity onPress={() => toggleWishlist(selectedSpot)} style={styles.wishlistButton}>
@@ -150,10 +153,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 10,
   },
-  disabledButton: {
-    backgroundColor: '#ccc',
-  },
   bookText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+  soldOutText: {
+    flex: 0.9,
+    textAlign: 'center',
+    fontSize: 16,
+    color: 'red',
+    fontWeight: 'bold',
+  },
   wishlistButton: {
     flex: 0.1,
     backgroundColor: '#f8f8f8',
