@@ -1,35 +1,29 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useContext } from 'react'; // Import useState and useContext
 import { 
   View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking, Alert 
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../navigation/AppNavigation';
+import { WalletContext } from '../context/WalletContext'; // Import WalletContext
+import { useAuth } from '../navigation/AppNavigation'; // Import useAuth
 
 const ProfileScreen = ({ navigation }) => {
-  const [walletBalance, setWalletBalance] = useState(0);
-  const [transactions, setTransactions] = useState([]);
-  const [userData, setUserData] = useState({ username: '', email: '', phone: '' }); // State for user data
-  const { logout } = useAuth();  
+  const { balance } = useContext(WalletContext); // Use WalletContext
+  const [userData, setUserData] = useState({ username: '', email: '', phone: '' }); // Correct useState usage
+  const { logout } = useAuth(); // Use useAuth
 
-  // Fetch wallet balance and user data when screen is focused
+  // Fetch user data when screen is focused
   useFocusEffect(
     React.useCallback(() => {
       const fetchData = async () => {
         try {
-          // Fetch wallet balance
-          const balance = await AsyncStorage.getItem('walletBalance');
-          if (balance) {
-            setWalletBalance(parseFloat(balance)); // Convert string to number
-          }
-
           // Fetch user data
           const storedUserData = await AsyncStorage.getItem('userData');
           if (storedUserData) {
             setUserData(JSON.parse(storedUserData)); // Parse the string back to an object
           }
         } catch (error) {
-          console.log("Error fetching data", error);
+          console.log("Error fetching user data", error);
           Alert.alert("Error", "Failed to fetch user data. Please try again.");
         }
       };
@@ -70,7 +64,6 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
@@ -78,7 +71,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.userName}>{userData.username}</Text> {/* Display username */}
             <Text style={styles.email}>{userData.email}</Text> {/* Display email */}
             <Text style={styles.phone}>{userData.phone}</Text> {/* Display phone number */}
-            <Text style={styles.balance}>₹ {walletBalance.toFixed(2)}</Text>
+            <Text style={styles.balance}>₹ {balance.toFixed(2)}</Text> {/* Display wallet balance */}
           </View>
         </View>
 
@@ -86,7 +79,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.walletActions}>
           <TouchableOpacity style={styles.walletButton} onPress={() => navigation.navigate('Wallet')}>
             <Image source={require('../assets/icons/rupee.png')} style={styles.icon} />
-            <Text style={styles.walletText}>₹ {walletBalance.toFixed(2)}</Text>
+            <Text style={styles.walletText}>₹ {balance.toFixed(2)}</Text> {/* Display wallet balance */}
             <Text style={styles.actionText}>Add Cash To Wallet</Text>
           </TouchableOpacity>
 
@@ -100,13 +93,7 @@ const ProfileScreen = ({ navigation }) => {
         {/* Transactions Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Recent Transactions</Text>
-          {transactions.length === 0 ? (
-            <Text style={styles.noTransactions}>No recent transactions</Text>
-          ) : (
-            transactions.map((transaction, index) => (
-              <Text key={index} style={styles.transactionItem}>{transaction}</Text>
-            ))
-          )}
+          <Text style={styles.noTransactions}>No recent transactions</Text>
         </View>
 
         {/* My Activity Section */}
@@ -130,7 +117,6 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         <Image source={require('../assets/images/footer.png')} style={styles.footerImage} />
-
       </View>
     </ScrollView>
   );

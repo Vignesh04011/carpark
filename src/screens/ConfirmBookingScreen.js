@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -13,6 +13,7 @@ const ConfirmBookingScreen = () => {
   const [carType, setCarType] = useState('SUV');
   const [numberPlate, setNumberPlate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0); // Add wallet balance state
 
   const now = new Date();
   const [checkInTime, setCheckInTime] = useState(now);
@@ -21,28 +22,80 @@ const ConfirmBookingScreen = () => {
   const [showCheckInPicker, setShowCheckInPicker] = useState(false);
   const [showCheckOutPicker, setShowCheckOutPicker] = useState(false);
 
-  const handleConfirmBooking = async () => {
-    if (!carType || !numberPlate) {
+  // Fetch wallet balance when the component mounts
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      try {
+        const balance = await AsyncStorage.getItem('walletBalance');
+        if (balance) {
+          setWalletBalance(parseFloat(balance));
+        }
+      } catch (error) {
+        console.error('Error fetching wallet balance:', error);
+      }
+    };
+
+    fetchWalletBalance();
+  }, []);
+
+  const calculateDuration = (start, end) => {
+    const durationInMilliseconds = end - start;
+    const durationInHours = durationInMilliseconds / (1000 * 60 * 60);
+    return Math.ceil(durationInHours); // Round up to the nearest hour
+  };
+
+  const calculateCost = (slots, duration) => {
+    const costPerSlotPerHour = 50; // ₹50 per slot per hour
+    return slots.length * duration * costPerSlotPerHour;
+  };
+
+  const validateInputs = () => {
+    if (!carType || !numberPlate.trim()) {
       Alert.alert('Validation Error', 'Please fill in all fields.');
-      return;
+      return false;
     }
-  
+
     const numberPlateRegex = /^[A-Z0-9]{6,10}$/i;
-    if (!numberPlateRegex.test(numberPlate)) {
+    if (!numberPlateRegex.test(numberPlate.trim())) {
       Alert.alert('Validation Error', 'Please enter a valid number plate (6-10 alphanumeric characters).');
-      return;
+      return false;
     }
-  
+
     if (checkOutTime <= checkInTime) {
       Alert.alert('Validation Error', 'Check-out time must be after check-in time.');
-      return;
+      return false;
     }
-  
+
+    return true;
+  };
+
+  const deductFromWallet = async (amount) => {
+    try {
+      if (walletBalance < amount) {
+        Alert.alert('Insufficient Balance', 'You do not have enough funds in your wallet.');
+        return false;
+      }
+
+      const newBalance = walletBalance - amount;
+      await AsyncStorage.setItem('walletBalance', newBalance.toString());
+      setWalletBalance(newBalance); // Update state with new balance
+      return true;
+    } catch (error) {
+      console.error('Error deducting from wallet:', error);
+      Alert.alert('Error', 'An error occurred while deducting funds. Please try again.');
+      return false;
+    }
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!validateInputs()) return;
+
     setLoading(true);
-  
-    // Generate a unique ID for the booking
+
     const bookingId = Math.random().toString(36).substr(2, 9);
-  
+    const duration = calculateDuration(checkInTime, checkOutTime);
+    const bookingCost = calculateCost(selectedSlots, duration);
+
     const bookingDetails = {
       id: bookingId,
       spotId: spot.id,
@@ -52,17 +105,24 @@ const ConfirmBookingScreen = () => {
       checkInTime: checkInTime.toISOString(),
       checkOutTime: checkOutTime.toISOString(),
       spotName: spot.name,
-      qrCodeValue: bookingId, // Use booking ID as QR code value
+      qrCodeValue: bookingId,
+      cost: bookingCost,
     };
-  
+
     try {
+      // Save the booking details first
       const existingBookings = await AsyncStorage.getItem('bookings');
       const updatedBookings = existingBookings ? JSON.parse(existingBookings) : [];
       updatedBookings.push(bookingDetails);
       await AsyncStorage.setItem('bookings', JSON.stringify(updatedBookings));
-  
-      // Navigate to BookingScreen to show all bookings
-      navigation.navigate('Booking');
+
+      // Deduct money from the wallet after successful booking
+      const deductionSuccess = await deductFromWallet(bookingCost);
+      if (deductionSuccess) {
+        // Navigate to the booking confirmation screen with QR code
+        navigation.navigate('Booking', { bookingDetails });
+        Alert.alert('Success', `Booking confirmed! ₹${bookingCost} deducted from your wallet.`);
+      }
     } catch (error) {
       console.error('Error saving booking:', error);
       Alert.alert('Error', 'An error occurred while saving your booking. Please try again.');
@@ -88,6 +148,9 @@ const ConfirmBookingScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Confirm Booking for {spot.name}</Text>
+
+      {/* Display Wallet Balance */}
+      <Text style={styles.walletBalance}>Wallet Balance: ₹{walletBalance.toFixed(2)}</Text>
 
       {/* Car Type Dropdown */}
       <View style={styles.input}>
@@ -186,6 +249,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
     color: '#6200ea',
+  },
+  walletBalance: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
   },
   input: {
     borderWidth: 1,

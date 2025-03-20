@@ -1,30 +1,23 @@
-import React, { useState, useEffect } from 'react';
+// WalletScreen.js
+import React, { useState, useContext } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Alert 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { WalletContext } from '../context/WalletContext'; // Import WalletContext
 
 const WalletScreen = ({ navigation }) => {
-  const [balance, setBalance] = useState(0.00);
+  const { balance, walletHistory, updateBalance } = useContext(WalletContext);
   const [amount, setAmount] = useState('');
-  const [walletHistory, setWalletHistory] = useState([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const storedBalance = await AsyncStorage.getItem('walletBalance');
-      const storedHistory = await AsyncStorage.getItem('walletHistory');
-      
-      if (storedBalance) setBalance(parseFloat(storedBalance));
-      if (storedHistory) setWalletHistory(JSON.parse(storedHistory));
-    };
-    fetchData();
-  }, []);
 
   const handleFakeTransaction = async () => {
     const enteredAmount = parseFloat(amount);
-    if (isNaN(enteredAmount) || enteredAmount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount.');
+    if (isNaN(enteredAmount)) {
+      Alert.alert('Invalid Amount', 'Please enter a valid number.');
+      return;
+    }
+    if (enteredAmount <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter an amount greater than 0.');
       return;
     }
 
@@ -37,13 +30,7 @@ const WalletScreen = ({ navigation }) => {
       note: 'Fake Wallet Top-Up',
     };
 
-    const updatedHistory = [newTransaction, ...walletHistory];
-
-    await AsyncStorage.setItem('walletBalance', newBalance.toString());
-    await AsyncStorage.setItem('walletHistory', JSON.stringify(updatedHistory));
-
-    setBalance(newBalance);
-    setWalletHistory(updatedHistory);
+    await updateBalance(newBalance, newTransaction);
     setAmount('');
     Alert.alert('Transaction Successful', `₹${enteredAmount.toFixed(2)} added to your wallet.`);
   };

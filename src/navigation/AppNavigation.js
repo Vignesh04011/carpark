@@ -20,6 +20,7 @@ import RateAppScreen from '../screens/RateAppScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import SplashScreen from '../screens/SplashScreen';
 import SlotSelectionScreen from '../screens/SlotSelectionScreen';
+import { WalletProvider } from '../context/WalletContext'; // Correct import path
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -167,7 +168,9 @@ const styles = StyleSheet.create({
 export default function App() {
   return (
     <AuthProvider>
-      <AppNavigation />
+      <WalletProvider> {/* Wrap the app with WalletProvider */}
+        <AppNavigation />
+      </WalletProvider>
     </AuthProvider>
   );
 }
