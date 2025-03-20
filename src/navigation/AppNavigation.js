@@ -17,6 +17,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
 import ConfirmBookingScreen from '../screens/ConfirmBookingScreen';
 import RateAppScreen from '../screens/RateAppScreen';
+import SplashScreen from '../screens/SplashScreen';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -27,7 +28,7 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem('user');
+        const storedUser = await AsyncStorage.getItem('userData'); // Fetch userData instead of 'user'
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
@@ -40,12 +41,12 @@ const AuthProvider = ({ children }) => {
 
   const login = async (userData) => {
     setUser(userData);
-    await AsyncStorage.setItem('user', JSON.stringify(userData));
+    await AsyncStorage.setItem('userData', JSON.stringify(userData)); // Store userData
   };
 
   const logout = async () => {
     setUser(null);
-    await AsyncStorage.removeItem('user');
+    await AsyncStorage.removeItem('userData'); // Remove userData
   };
 
   return (
@@ -125,6 +126,7 @@ const AppNavigation = () => {
           <Stack.Screen name="Main" component={MainStackNavigator} />
         ) : (
           <>
+            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Auth" component={AuthStack} />
           </>
