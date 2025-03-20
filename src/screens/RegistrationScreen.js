@@ -21,6 +21,7 @@ const RegisterScreen = ({ navigation }) => {
       username,
       email,
       phone,
+      password, // Include password in the userData object
       userType,
     };
 
@@ -29,8 +30,11 @@ const RegisterScreen = ({ navigation }) => {
       await AsyncStorage.setItem("userData", JSON.stringify(userData));
       console.log("User data stored successfully:", userData);
 
-      // Navigate to the main screen
-      navigation.replace("Main");
+      // Show success message
+      Alert.alert("Success", "Registration successful! Please log in.");
+
+      // Navigate to the Login screen
+      navigation.replace("Login");
     } catch (error) {
       console.log("Error storing user data:", error);
       Alert.alert("Error", "Failed to register. Please try again.");
