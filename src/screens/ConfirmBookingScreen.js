@@ -1,148 +1,225 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Picker } from '@react-native-picker/picker'; // Import Picker
+import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import QRCode from 'react-native-qrcode-svg';
 
-const ConfirmBookingScreen = ({ route, navigation }) => {
-  const { spot } = route.params;
-  const [selectedVehicle, setSelectedVehicle] = useState('');
-  const [checkInTime, setCheckInTime] = useState(new Date());
-  const [checkOutTime, setCheckOutTime] = useState(new Date());
-  const [showCheckInPicker, setShowCheckInPicker] = useState(false);
-  const [showCheckOutPicker, setShowCheckOutPicker] = useState(false);
-  const [qrData, setQrData] = useState('');
+const ConfirmBookingScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { selectedSlots, spot } = route.params;
 
-  const vehicles = ['Car', 'Bike', 'SUV', 'Truck'];
+  const [carType, setCarType] = useState('SUV'); // Default car type
+  const [numberPlate, setNumberPlate] = useState('');
 
-  const handleBooking = async () => {
-    if (!selectedVehicle) {
-      Alert.alert("Select a vehicle", "Please choose a vehicle before confirming.");
+  // Initialize check-in and check-out times with the current time
+  const now = new Date();
+  const [checkInTime, setCheckInTime] = useState({
+    hours: now.getHours(),
+    minutes: now.getMinutes(),
+  });
+  const [checkOutTime, setCheckOutTime] = useState({
+    hours: now.getHours() + 1, // Default check-out time is 1 hour after check-in
+    minutes: now.getMinutes(),
+  });
+
+  const handleConfirmBooking = async () => {
+    if (!carType || !numberPlate) {
+      alert('Please fill in all fields.');
       return;
     }
 
+    // Convert check-in and check-out times to Date objects
+    const checkInDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      checkInTime.hours,
+      checkInTime.minutes
+    );
+    const checkOutDate = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      checkOutTime.hours,
+      checkOutTime.minutes
+    );
+
+    if (checkOutDate <= checkInDate) {
+      alert('Check-out time must be after check-in time.');
+      return;
+    }
+
+    const bookingDetails = {
+      spotId: spot.id,
+      selectedSlots,
+      carType,
+      numberPlate, // No uppercase enforcement
+      checkInTime: checkInDate.toISOString(),
+      checkOutTime: checkOutDate.toISOString(),
+    };
+
     try {
-      const bookingDetails = {
-        id: Date.now(),
-        name: spot.name,
-        address: spot.address,
-        price: spot.price,
-        checkInTime: checkInTime.toLocaleTimeString(),
-        checkOutTime: checkOutTime.toLocaleTimeString(),
-        vehicle: selectedVehicle,
-      };
+      // Save booking details to AsyncStorage
+      const existingBookings = await AsyncStorage.getItem('bookings');
+      const updatedBookings = existingBookings ? JSON.parse(existingBookings) : [];
+      updatedBookings.push(bookingDetails);
+      await AsyncStorage.setItem('bookings', JSON.stringify(updatedBookings));
 
-      let storedBookings = await AsyncStorage.getItem('bookings');
-      storedBookings = storedBookings ? JSON.parse(storedBookings) : [];
-
-      // ✅ Add new booking at the beginning
-      storedBookings = [bookingDetails, ...storedBookings];
-
-      await AsyncStorage.setItem('bookings', JSON.stringify(storedBookings));
-
-      // ✅ Update active parking session with the latest booking
-      await AsyncStorage.setItem('activeParkingSession', JSON.stringify(bookingDetails));
-
-      setQrData(JSON.stringify(bookingDetails)); // Generate QR Code
-      Alert.alert("Success", "Booking confirmed!");
-      navigation.navigate('Bookings'); // Navigate to Booking History Screen
+      // Navigate back to the map or another screen
+      navigation.navigate("MainTabs", { screen: "Map" });
     } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Booking failed.");
+      console.error('Error saving booking:', error);
     }
   };
 
+  const renderTimePicker = (time, setTime, title) => (
+    <View style={styles.timePickerContainer}>
+      <Text style={styles.timePickerTitle}>{title}</Text>
+      <View style={styles.timePicker}>
+        <TouchableOpacity
+          style={styles.timeButton}
+          onPress={() => setTime({ ...time, hours: (time.hours + 1) % 24 })}
+        >
+          <Text style={styles.timeButtonText}>+</Text>
+        </TouchableOpacity>
+        <Text style={styles.timeText}>
+          {time.hours.toString().padStart(2, '0')}:
+          {time.minutes.toString().padStart(2, '0')}
+        </Text>
+        <TouchableOpacity
+          style={styles.timeButton}
+          onPress={() => setTime({ ...time, hours: (time.hours - 1 + 24) % 24 })}
+        >
+          <Text style={styles.timeButtonText}>-</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.timePicker}>
+        <TouchableOpacity
+          style={styles.timeButton}
+          onPress={() => setTime({ ...time, minutes: (time.minutes + 1) % 60 })}
+        >
+          <Text style={styles.timeButtonText}>+</Text>
+        </TouchableOpacity>
+        <Text style={styles.timeText}>
+          {time.hours.toString().padStart(2, '0')}:
+          {time.minutes.toString().padStart(2, '0')}
+        </Text>
+        <TouchableOpacity
+          style={styles.timeButton}
+          onPress={() => setTime({ ...time, minutes: (time.minutes - 1 + 60) % 60 })}
+        >
+          <Text style={styles.timeButtonText}>-</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Confirm Parking Slot</Text>
-      <Image source={require('../assets/images/confirm_booking.jpg')} style={styles.image} />
+      <Text style={styles.title}>Confirm Booking for {spot.name}</Text>
 
-      <View style={styles.card}>
-        <Text style={styles.detail}><Text style={styles.bold}>Parking Area:</Text> {spot.name}</Text>
-        <Text style={styles.detail}><Text style={styles.bold}>Available Slots:</Text> {spot.spaces}</Text>
-
-        {/* Vehicle Picker */}
-        <Text style={styles.detail}><Text style={styles.bold}>Choose Vehicle:</Text></Text>
+      {/* Car Type Dropdown */}
+      <View style={styles.input}>
         <Picker
-          selectedValue={selectedVehicle}
-          style={styles.picker}
-          onValueChange={(itemValue) => setSelectedVehicle(itemValue)}
+          selectedValue={carType}
+          onValueChange={(itemValue) => setCarType(itemValue)}
         >
-          <Picker.Item label="Select Vehicle" value="" />
-          {vehicles.map((vehicle, index) => (
-            <Picker.Item key={index} label={vehicle} value={vehicle} />
-          ))}
+          <Picker.Item label="SUV" value="SUV" />
+          <Picker.Item label="Sedan" value="Sedan" />
+          <Picker.Item label="Hatchback" value="Hatchback" />0
+          <Picker.Item label="Crossover" value="Crossover" />
+          <Picker.Item label="Coupe" value="Coupe" />
+          <Picker.Item label="Convertible" value="Convertible" />
+          <Picker.Item label="Pickup Truck" value="Pickup Truck" />
+          <Picker.Item label="Jeep" value="Jeep" />
+          <Picker.Item label="Minivan" value="Minivan" />
+          <Picker.Item label="Station Wagon" value="Station Wagon" />
         </Picker>
-
-        {/* Check-in Time Picker */}
-        <Text style={styles.detail}><Text style={styles.bold}>Check-in Time:</Text></Text>
-        <TouchableOpacity onPress={() => setShowCheckInPicker(true)} style={styles.timeButton}>
-          <Text style={styles.timeText}>{checkInTime.toLocaleTimeString()}</Text>
-        </TouchableOpacity>
-        {showCheckInPicker && (
-          <DateTimePicker
-            value={checkInTime}
-            mode="time"
-            is24Hour={true}
-            display="spinner"
-            onChange={(event, selectedTime) => {
-              setShowCheckInPicker(false);
-              if (selectedTime) setCheckInTime(selectedTime);
-            }}
-          />
-        )}
-
-        {/* Check-out Time Picker */}
-        <Text style={styles.detail}><Text style={styles.bold}>Check-out Time:</Text></Text>
-        <TouchableOpacity onPress={() => setShowCheckOutPicker(true)} style={styles.timeButton}>
-          <Text style={styles.timeText}>{checkOutTime.toLocaleTimeString()}</Text>
-        </TouchableOpacity>
-        {showCheckOutPicker && (
-          <DateTimePicker
-            value={checkOutTime}
-            mode="time"
-            is24Hour={true}
-            display="spinner"
-            onChange={(event, selectedTime) => {
-              setShowCheckOutPicker(false);
-              if (selectedTime) setCheckOutTime(selectedTime);
-            }}
-          />
-        )}
-
-        <Text style={styles.detail}>
-          <Text style={styles.bold}>Amount Paid:</Text> ₹{spot.price} per hour
-        </Text>
       </View>
 
-      {qrData ? (
-        <View style={styles.qrContainer}>
-          <QRCode value={qrData} size={150} />
-          <Text>Scan this QR code at the entry</Text>
-        </View>
-      ) : (
-        <TouchableOpacity style={styles.button} onPress={handleBooking}>
-          <Text style={styles.buttonText}>Confirm Booking</Text>
-        </TouchableOpacity>
-      )}
+      {/* Number Plate Input */}
+      <TextInput
+        style={styles.input}
+        placeholder="Number Plate"
+        value={numberPlate}
+        onChangeText={(text) => {
+          console.log('Number Plate Input:', text); // Debugging
+          setNumberPlate(text); // No uppercase enforcement
+        }}
+        maxLength={10} // Optional: Limit the number of characters
+      />
+
+      {/* Time Pickers */}
+      {renderTimePicker(checkInTime, setCheckInTime, 'Check-In Time')}
+      {renderTimePicker(checkOutTime, setCheckOutTime, 'Check-Out Time')}
+
+      {/* Confirm Button */}
+      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmBooking}>
+        <Text style={styles.confirmButtonText}>Confirm Booking</Text>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4ecff', alignItems: 'center', paddingTop: 20 },
-  header: { fontSize: 20, fontWeight: 'bold', color: '#6200ea', marginBottom: 10 },
-  image: { width: 250, height: 150, resizeMode: 'contain', marginBottom: 20 },
-  card: { backgroundColor: 'white', padding: 15, borderRadius: 10, width: '90%', shadowColor: '#000', shadowOpacity: 0.2, elevation: 5 },
-  detail: { fontSize: 16, marginVertical: 5 },
-  bold: { fontWeight: 'bold' },
-  picker: { height: 50, width: '100%', backgroundColor: '#f2f2f2', borderRadius: 5, marginBottom: 10 },
-  timeButton: { backgroundColor: '#e0e0e0', padding: 10, borderRadius: 5, alignItems: 'center', marginVertical: 5 },
-  timeText: { fontSize: 16 },
-  button: { backgroundColor: '#6200ea', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 20, width: '90%' },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  qrContainer: { alignItems: 'center', marginTop: 20 }
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  timePickerContainer: {
+    marginBottom: 20,
+  },
+  timePickerTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  timePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  timeButton: {
+    backgroundColor: '#6200ea',
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  timeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  timeText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  confirmButton: {
+    backgroundColor: '#6200ea',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 export default ConfirmBookingScreen;

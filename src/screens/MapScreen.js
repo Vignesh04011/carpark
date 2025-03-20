@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Image, Text, Modal, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, Text, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,9 +8,16 @@ const MapScreen = () => {
   const [selectedSpot, setSelectedSpot] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [wishlist, setWishlist] = useState([]);
+  const [parkingSpots, setParkingSpots] = useState([
+    { id: 1, latitude: 18.8211, longitude: 73.2705, booked: true, name: "Parking A", address: "Sector 44A, Chembur, Mumbai", spaces: 0, price: 80, rating: 4.5, image: require('../assets/images/ParkingA.png') },
+    { id: 2, latitude: 18.8205, longitude: 73.2720, booked: false, name: "Corporate Parking", address: "Main Street, Khalapur", spaces: 50, price: 100, rating: 3.8, image: require('../assets/images/ParkingB.png') },
+    { id: 3, latitude: 18.8199, longitude: 73.2715, booked: false, name: "Apartment Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
+    { id: 4, latitude: 18.8220, longitude: 73.2708, booked: true, name: "Parking D", address: "Near Mall, Khalapur", spaces: 0, price: 90, rating: 3.5, image: require('../assets/images/ParkingB.png') },
+    { id: 5, latitude: 18.8222, longitude: 73.2723, booked: false, name: "Private Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
+  ]);
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
-  // Default map center
   const centerLocation = {
     latitude: 18.820721,
     longitude: 73.2710681,
@@ -18,53 +25,97 @@ const MapScreen = () => {
     longitudeDelta: 0.01,
   };
 
-  // Parking spots data
-  const parkingSpots = [
-    { id: 1, latitude: 18.8211, longitude: 73.2705, booked: true, name: "Parking A", address: "Sector 44A, Chembur, Mumbai", spaces: 0, price: 80, rating: 4.5, image: require('../assets/images/ParkingA.png') },
-    { id: 2, latitude: 18.8205, longitude: 73.2720, booked: false, name: "Corporate Parking", address: "Main Street, Khalapur", spaces: 50, price: 100, rating: 3.8, image: require('../assets/images/ParkingB.png') },
-    { id: 3, latitude: 18.8199, longitude: 73.2715, booked: false, name: "Apartment Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
-    { id: 4, latitude: 18.8220, longitude: 73.2708, booked: true, name: "Parking D", address: "Near Mall, Khalapur", spaces: 0, price: 90, rating: 3.5, image: require('../assets/images/ParkingB.png') },
-    { id: 5, latitude: 18.8222, longitude: 73.2723, booked: false, name: "Private Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
-  ];
-
-  // Fetch wishlisted items from AsyncStorage
   useEffect(() => {
     const fetchWishlist = async () => {
-      const storedWishlist = await AsyncStorage.getItem('WishlistedParking');
-      setWishlist(storedWishlist ? JSON.parse(storedWishlist) : []);
+      try {
+        const storedWishlist = await AsyncStorage.getItem('WishlistedParking');
+        setWishlist(storedWishlist ? JSON.parse(storedWishlist) : []);
+      } catch (error) {
+        console.error('Error fetching wishlist:', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchWishlist();
   }, []);
 
-  // Handle marker press
+  useEffect(() => {
+    const loadReservedSlots = async () => {
+      try {
+        const bookings = await AsyncStorage.getItem('bookings');
+        if (bookings) {
+          const parsedBookings = JSON.parse(bookings);
+          const now = new Date();
+
+          const activeBookings = parsedBookings.filter((booking) => {
+            const checkOutTime = new Date(booking.checkOutTime);
+            return checkOutTime > now;
+          });
+
+          const updatedParkingSpots = parkingSpots.map((spot) => {
+            const reservedSlots = activeBookings
+              .filter((booking) => booking.spotId === spot.id)
+              .flatMap((booking) => booking.selectedSlots);
+
+            return {
+              ...spot,
+              booked: reservedSlots.length >= spot.spaces,
+            };
+          });
+
+          setParkingSpots(updatedParkingSpots);
+          await AsyncStorage.setItem('bookings', JSON.stringify(activeBookings));
+        }
+      } catch (error) {
+        console.error('Error loading reserved slots:', error);
+      }
+    };
+
+    const interval = setInterval(loadReservedSlots, 60000);
+    loadReservedSlots();
+    return () => clearInterval(interval);
+  }, []);
+
   const handleMarkerPress = (spot) => {
     setSelectedSpot(spot);
     setModalVisible(true);
   };
 
-  // Handle booking slot
   const handleBookSlot = () => {
     setModalVisible(false);
     if (selectedSpot) {
-      navigation.navigate('ConfirmBooking', { spot: selectedSpot });
-    }
-  };
-
-  // Toggle wishlist
-  const toggleWishlist = async (spot) => {
-    let updatedWishlist;
-    if (wishlist.some((item) => item.id === spot.id)) {
-      updatedWishlist = wishlist.filter((item) => item.id !== spot.id);
+      console.log('Navigating to SlotSelection with:', selectedSpot);
+      navigation.navigate('SlotSelection', { spot: selectedSpot });
     } else {
-      updatedWishlist = [...wishlist, spot];
+      console.log('Selected spot is null');
     }
-
-    setWishlist(updatedWishlist);
-    await AsyncStorage.setItem('WishlistedParking', JSON.stringify(updatedWishlist));
   };
 
-  // Check if a spot is wishlisted
+  const toggleWishlist = async (spot) => {
+    try {
+      let updatedWishlist;
+      if (wishlist.some((item) => item.id === spot.id)) {
+        updatedWishlist = wishlist.filter((item) => item.id !== spot.id);
+      } else {
+        updatedWishlist = [...wishlist, spot];
+      }
+
+      setWishlist(updatedWishlist);
+      await AsyncStorage.setItem('WishlistedParking', JSON.stringify(updatedWishlist));
+    } catch (error) {
+      console.error('Error updating wishlist:', error);
+    }
+  };
+
   const isWishlisted = (spot) => wishlist.some((item) => item.id === spot.id);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6200ea" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -76,10 +127,12 @@ const MapScreen = () => {
         ))}
       </MapView>
 
-      {/* Modal for Parking Spot Details */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalContainer}>
           <View style={styles.modalCard}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+              <Image source={require('../assets/icons/about.png')} style={styles.closeIcon} />
+            </TouchableOpacity>
             {selectedSpot && (
               <>
                 <Image source={selectedSpot.image} style={styles.parkingImage} />
@@ -93,15 +146,11 @@ const MapScreen = () => {
                   {selectedSpot.booked ? (
                     <Text style={styles.soldOutText}>Sold Out</Text>
                   ) : (
-                    <TouchableOpacity
-                      style={styles.bookButton}
-                      onPress={handleBookSlot}
-                    >
+                    <TouchableOpacity style={styles.bookButton} onPress={handleBookSlot}>
                       <Text style={styles.bookText}>Book the Slot</Text>
                     </TouchableOpacity>
                   )}
 
-                  {/* Wishlist Button */}
                   <TouchableOpacity onPress={() => toggleWishlist(selectedSpot)} style={styles.wishlistButton}>
                     <Image source={isWishlisted(selectedSpot) ? require('../assets/icons/heart-filled.png') : require('../assets/icons/heart-outline.png')} style={styles.heartIcon} />
                   </TouchableOpacity>
@@ -173,6 +222,22 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
     tintColor: 'red',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+  },
+  closeIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#6200ea',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
