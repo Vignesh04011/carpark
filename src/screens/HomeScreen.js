@@ -3,6 +3,7 @@ import { View, ScrollView, StyleSheet, Text, Image, TouchableOpacity } from 'rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import PromotionsBanner from '../components/PromotionsBanner';
+import LinearGradient from 'react-native-linear-gradient';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -55,11 +56,19 @@ const HomeScreen = () => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hrs.toString().padStart(2, '0')}hr : ${mins.toString().padStart(2, '0')}min`;
   };
 
   return (
     <ScrollView style={styles.container}>
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={['#6200ea', '#3700b3']}
+        style={styles.headerContainer}
+      >
+        <Text style={styles.headerText}>CarPark</Text>
+      </LinearGradient>
+
       {/* Promotions & Offers */}
       <PromotionsBanner />
 
@@ -68,7 +77,7 @@ const HomeScreen = () => {
         <View style={styles.activeSessionCard}>
           <Image source={require('../assets/icons/parking-area.png')} style={styles.parkingIcon} />
           <View style={styles.details}>
-            <Text style={styles.header}>Active Parking Session</Text>
+            <Text style={styles.sessionHeader}>Active Parking Session</Text>
             <Text style={styles.text}><Text style={styles.bold}>📍 Parking Area:</Text> {recentBooking.name}</Text>
             <Text style={styles.text}><Text style={styles.bold}>🚘 Vehicle:</Text> {recentBooking.vehicle}</Text>
             <Text style={styles.text}><Text style={styles.bold}>⏰ Check-in:</Text> {recentBooking.checkInTime}</Text>
@@ -79,20 +88,42 @@ const HomeScreen = () => {
               <View style={[styles.progressFill, { width: `${progress}%` }]} />
             </View>
 
-            {/* Time Left */}
-            <Text style={[styles.timer, timeLeft > 0 ? styles.activeTime : styles.expiredTime]}>
-              ⏳ Time Left: {timeLeft > 0 ? formatTime(timeLeft) : 'Session Expired'}
-            </Text>
+            {/* Time Remaining */}
+            <View style={styles.timeRemainingContainer}>
+              <Text style={styles.timeRemainingText}>
+                ⏳ Time Remaining: {timeLeft > 0 ? formatTime(timeLeft) : 'Session Expired'}
+              </Text>
+            </View>
           </View>
         </View>
       )}
 
-      {/* Subscription Button */}
+      {/* Subscription Button with Gradient */}
       <TouchableOpacity 
         style={styles.subscriptionButton} 
         onPress={() => navigation.navigate('Subscription')}>
-        <Text style={styles.subscriptionText}>Subscribe Now</Text>
+        <LinearGradient
+          colors={['#6200ea', '#3700b3']}
+          style={styles.gradientButton}
+        >
+          <Text style={styles.subscriptionText}>Subscribe Now</Text>
+        </LinearGradient>
       </TouchableOpacity>
+
+      {/* EV Station Button with Gradient */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('EVStation')}
+        >
+          <LinearGradient
+            colors={['#4A90E2', '#1E90FF']}
+            style={styles.gradientButton}
+          >
+            <Text style={styles.buttonText}>EV Station</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -100,8 +131,20 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#EDEDED',
     paddingTop: 10,
+  },
+  headerContainer: {
+    padding: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 10,
+  },
+  headerText: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   activeSessionCard: {
     flexDirection: 'row',
@@ -109,11 +152,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     padding: 20,
     marginHorizontal: 15,
-    marginTop: 15,
-    borderRadius: 12,
+    marginTop:15,
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 10,
+    elevation: 10,
   },
   parkingIcon: {
     width: 60,
@@ -123,7 +168,7 @@ const styles = StyleSheet.create({
   details: {
     flex: 1,
   },
-  header: {
+  sessionHeader: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#6200ea',
@@ -139,17 +184,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#000',
   },
-  timer: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  activeTime: {
-    color: '#FF5733',
-  },
-  expiredTime: {
-    color: 'red',
-  },
   progressBar: {
     width: '100%',
     height: 8,
@@ -162,19 +196,45 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#6200ea',
   },
-
-  // Subscription Button
-  subscriptionButton: {
-    backgroundColor: '#6200ea',
-    padding: 15,
-    borderRadius: 10,
+  timeRemainingContainer: {
+    marginTop: 10,
     alignItems: 'center',
-    justifyContent: 'center',
-    margin: 20,
+  },
+  timeRemainingText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF5733',
+  },
+  subscriptionButton: {
+    margin: 40,
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 10,
+  },
+  gradientButton: {
+    padding: 15,
+    alignItems: 'center',
+    borderRadius: 15,
   },
   subscriptionText: {
     color: 'white',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    marginBottom: 80,
+  },
+  button: {
+    width: '60%',
+    borderRadius: 45,
+    overflow: 'hidden',
+    elevation: 10,
+    marginBottom: 90,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });

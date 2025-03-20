@@ -15,38 +15,48 @@ const PromotionsBanner = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextIndex = (currentIndex + 1) % promotions.length;
-      setCurrentIndex(nextIndex);
+      setCurrentIndex((prevIndex) => {
+        const nextIndex = (prevIndex + 1) % promotions.length;
 
-      flatListRef.current?.scrollToIndex({
-        index: nextIndex,
-        animated: true,
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+
+        return nextIndex;
       });
-    }, 3000); // Change image every 3 seconds
+    }, 5000); // Auto-scroll every 5 seconds
 
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, []);
 
   return (
-    <FlatList
-      ref={flatListRef}
-      data={promotions}
-      horizontal
-      pagingEnabled
-      showsHorizontalScrollIndicator={false}
-      keyExtractor={(_, index) => index.toString()}
-      renderItem={({ item }) => <Image source={item} style={styles.banner} />}
-    />
+    <View style={styles.bannerContainer}>
+      <FlatList
+        ref={flatListRef}
+        data={promotions}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={({ item }) => <Image source={item} style={styles.banner} />}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  bannerContainer: {
+    alignItems: 'center',
+    marginVertical: 15,
+  },
   banner: {
     width: screenWidth * 0.9,
-    height: 150,
-    borderRadius: 10,
-    marginHorizontal: 10,
+    height: 160,
+    borderRadius: 15,
+    marginHorizontal: 5,
     resizeMode: 'cover',
+    elevation: 5, // Adds a subtle shadow effect for better UI
   },
 });
 

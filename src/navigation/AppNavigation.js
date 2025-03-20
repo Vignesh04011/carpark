@@ -75,10 +75,10 @@ const tabBarIcon = (icon) => ({ focused }) => (
     <Image
       source={icon}
       style={{
-        width: 50,
-        height: 50,
+        width: 25,
+        height: 25,
         bottom: -20,
-        tintColor: focused ? '#4A90E2' : '#B0B0B0',
+        tintColor: focused ? '#6200ea' : '#B0B0B0',
       }}
     />
   </View>
@@ -92,11 +92,11 @@ const MainTabs = () => (
       tabBarShowLabel: false,
     }}
   >
-    <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/home.png')) }} />
+    <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/house.png')) }} />
     <Tab.Screen name="Wallet" component={WalletScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/wallet.png')) }} />
-    <Tab.Screen name="Map" component={MapScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/map.png')) }} />
+    <Tab.Screen name="Map" component={MapScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/navigation_arrow.png')) }} />
     <Tab.Screen name="Bookings" component={BookingScreen} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/bookings.png')) }} />
-    <Tab.Screen name="Profile" component={ProfileStack} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/profile.png')) }} />
+    <Tab.Screen name="Profile" component={ProfileStack} options={{ tabBarIcon: tabBarIcon(require('../assets/icons/user.png')) }} />
   </Tab.Navigator>
 );
 
