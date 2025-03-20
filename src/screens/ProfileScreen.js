@@ -9,20 +9,31 @@ import { useAuth } from '../navigation/AppNavigation';
 const ProfileScreen = ({ navigation }) => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
+  const [userData, setUserData] = useState({ username: '', email: '', phone: '' }); // State for user data
   const { logout } = useAuth();  
 
-  // Fetch wallet balance when screen is focused
+  // Fetch wallet balance and user data when screen is focused
   useFocusEffect(
     React.useCallback(() => {
-      const fetchWalletBalance = async () => {
+      const fetchData = async () => {
         try {
+          // Fetch wallet balance
           const balance = await AsyncStorage.getItem('walletBalance');
-          setWalletBalance(balance ? parseFloat(balance) : 0);
+          if (balance) {
+            setWalletBalance(parseFloat(balance)); // Convert string to number
+          }
+
+          // Fetch user data
+          const storedUserData = await AsyncStorage.getItem('userData');
+          if (storedUserData) {
+            setUserData(JSON.parse(storedUserData)); // Parse the string back to an object
+          }
         } catch (error) {
-          console.log("Error fetching wallet balance", error);
+          console.log("Error fetching data", error);
+          Alert.alert("Error", "Failed to fetch user data. Please try again.");
         }
       };
-      fetchWalletBalance();
+      fetchData();
     }, [])
   );
 
@@ -64,8 +75,9 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.profileCard}>
           <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
           <View>
-            <Text style={styles.userName}>Vignesh</Text>
-            <Text style={styles.email}>vigneshvane200@gmail.com</Text>
+            <Text style={styles.userName}>{userData.username}</Text> {/* Display username */}
+            <Text style={styles.email}>{userData.email}</Text> {/* Display email */}
+            <Text style={styles.phone}>{userData.phone}</Text> {/* Display phone number */}
             <Text style={styles.balance}>₹ {walletBalance.toFixed(2)}</Text>
           </View>
         </View>
@@ -163,6 +175,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   email: {
+    fontSize: 14,
+    color: '#888',
+  },
+  phone: {
     fontSize: 14,
     color: '#888',
   },

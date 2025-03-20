@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
 import { RadioButton } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RegisterScreen = ({ navigation }) => {
   const [username, setUsername] = useState("");
@@ -9,13 +10,31 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("normal");
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!username || !email || !phone || !password) {
-      alert("Please fill all fields correctly");
+      Alert.alert("Error", "Please fill all fields correctly");
       return;
     }
-    console.log("Registering:", username, email, phone, password);
-    navigation.replace("Main");
+
+    // Create a user object
+    const userData = {
+      username,
+      email,
+      phone,
+      userType,
+    };
+
+    try {
+      // Store user data in AsyncStorage
+      await AsyncStorage.setItem("userData", JSON.stringify(userData));
+      console.log("User data stored successfully:", userData);
+
+      // Navigate to the main screen
+      navigation.replace("Main");
+    } catch (error) {
+      console.log("Error storing user data:", error);
+      Alert.alert("Error", "Failed to register. Please try again.");
+    }
   };
 
   return (
@@ -24,7 +43,7 @@ const RegisterScreen = ({ navigation }) => {
       <Image source={require("../assets/images/app_logo.png")} style={styles.logo} />
 
       <View style={styles.radioContainer}>
-        <RadioButton.Group onValueChange={value => setUserType(value)} value={userType}>
+        <RadioButton.Group onValueChange={(value) => setUserType(value)} value={userType}>
           <View style={styles.radioOption}>
             <RadioButton value="normal" color="#613EEA" />
             <Text style={styles.radioText}>Normal User</Text>
@@ -84,26 +103,97 @@ const RegisterScreen = ({ navigation }) => {
       </TouchableOpacity>
 
       <Text style={styles.registerText}>
-        Already have an account? <Text style={styles.registerLink} onPress={() => navigation.navigate("Login")}>Login</Text>.
+        Already have an account?{" "}
+        <Text style={styles.registerLink} onPress={() => navigation.navigate("Login")}>
+          Login
+        </Text>
+        .
       </Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20, backgroundColor: "#fff" },
-  logo: {width: 150, height: 150, resizeMode: 'contain', marginBottom: 15 },
-  title: { fontSize: 24, fontWeight: "bold", color: "#613EEA", marginBottom: 25 },
-  radioContainer: { flexDirection: "row", alignItems: "center", marginBottom: 20, backgroundColor: "#fff", padding: 15, borderRadius: 20 },
-  radioOption: { flexDirection: "row", alignItems: "center", marginRight: 20 },
-  radioText: { fontSize: 16, fontWeight: "500" },
-  inputContainer: { flexDirection: "row", alignItems: "center", width: "100%", borderWidth: 1, borderColor: "#bbb", borderRadius: 20, backgroundColor: "#fff", marginBottom: 15, paddingHorizontal: 15 },
-  icon: { width: 28, height: 28, marginRight: 12 },
-  input: { flex: 1, height: 55, fontSize: 17, color: "#2c3e50" },
-  button: { width: "100%", height: 55, backgroundColor: "#613EEA", justifyContent: "center", alignItems: "center", borderRadius: 20 },
-  buttonText: { color: "#fff", fontSize: 20, fontWeight: "bold" },
-  registerText: { marginTop: 12, fontSize: 15, color: "#2c3e50" },
-  registerLink: { color: "#613EEA", fontWeight: "bold" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  logo: {
+    width: 150,
+    height: 150,
+    resizeMode: "contain",
+    marginBottom: 15,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#613EEA",
+    marginBottom: 25,
+  },
+  radioContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 20,
+  },
+  radioOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 20,
+  },
+  radioText: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+    paddingHorizontal: 15,
+  },
+  icon: {
+    width: 28,
+    height: 28,
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    height: 55,
+    fontSize: 17,
+    color: "#2c3e50",
+  },
+  button: {
+    width: "100%",
+    height: 55,
+    backgroundColor: "#613EEA",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  registerText: {
+    marginTop: 12,
+    fontSize: 15,
+    color: "#2c3e50",
+  },
+  registerLink: {
+    color: "#613EEA",
+    fontWeight: "bold",
+  },
 });
 
 export default RegisterScreen;
