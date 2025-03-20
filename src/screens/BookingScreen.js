@@ -1,96 +1,144 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, RefreshControl, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
 
 const BookingScreen = () => {
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Function to fetch bookings from AsyncStorage
   const fetchBookings = async () => {
     try {
       const storedBookings = await AsyncStorage.getItem('bookings');
       if (storedBookings) {
-        let parsedBookings = JSON.parse(storedBookings);
+        const parsedBookings = JSON.parse(storedBookings);
 
-        // Sorting: Move expired bookings to the bottom
-        const now = new Date();
-        parsedBookings.sort((a, b) => {
-          const checkOutA = new Date(`1970-01-01T${a.checkOutTime}`);
-          const checkOutB = new Date(`1970-01-01T${b.checkOutTime}`);
-
-          const isExpiredA = checkOutA < now;
-          const isExpiredB = checkOutB < now;
-
-          if (isExpiredA === isExpiredB) {
-            return checkOutB - checkOutA; // Latest first
-          }
-          return isExpiredA ? 1 : -1; // Expired ones go down
+        // Sort bookings by checkInTime in descending order (latest first)
+        const sortedBookings = parsedBookings.sort((a, b) => {
+          return new Date(b.checkInTime) - new Date(a.checkInTime);
         });
 
-        setBookings(parsedBookings);
-      } else {
-        setBookings([]);
+        setBookings(sortedBookings);
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
+      Alert.alert('Error', 'Unable to load bookings. Please try again.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  // Refresh bookings every time screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      fetchBookings();
-    }, [])
-  );
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchBookings();
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6200ea" />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Booking History</Text>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6200ea']} />
+      }
+    >
+      <Text style={styles.title}>Your Bookings</Text>
 
-      {bookings.length === 0 ? (
-        <Text style={styles.noBookings}>No bookings found</Text>
-      ) : (
-        <FlatList
-          data={bookings}
-          keyExtractor={(item) => item?.id?.toString() || Math.random().toString()}
-          renderItem={({ item }) => (
-            <View style={styles.bookingCard}>
-              <Text style={styles.title}>Parking: {item?.name || 'N/A'}</Text>
-              <Text>Vehicle: {item?.vehicle || 'N/A'}</Text>
-              <Text>Check-in: {item?.checkInTime || 'N/A'}</Text>
-              <Text>Check-out: {item?.checkOutTime || 'N/A'}</Text>
-              <Text>Amount Paid: ₹{item?.price || 'N/A'}</Text>
-
-              {/* QR Code with better styling */}
-              <View style={styles.qrContainer}>
-                <QRCode value={JSON.stringify(item)} size={120} />
-              </View>
+      {bookings.length > 0 ? (
+        bookings.map((booking) => (
+          <View key={booking.id} style={styles.bookingContainer}>
+            <Text style={styles.bookingTitle}>Booking ID: {booking.id}</Text>
+            <View style={styles.detailsContainer}>
+              <Text style={styles.detailText}>Parking: {booking.spotName}</Text>
+              <Text style={styles.detailText}>Vehicle: {booking.carType}</Text>
+              <Text style={styles.detailText}>Number Plate: {booking.numberPlate}</Text>
+              <Text style={styles.detailText}>Check-In: {new Date(booking.checkInTime).toLocaleTimeString()}</Text>
+              <Text style={styles.detailText}>Check-Out: {new Date(booking.checkOutTime).toLocaleTimeString()}</Text>
             </View>
-          )}
-        />
+
+            {/* QR Code */}
+            <View style={styles.qrContainer}>
+              <QRCode
+                value={booking.qrCodeValue} // Use the saved QR code value
+                size={200}
+              />
+              <Text style={styles.qrText}>Scan this QR code for verification</Text>
+            </View>
+          </View>
+        ))
+      ) : (
+        <Text style={styles.noBookingText}>No bookings found.</Text>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4ecff', padding: 20 },
-  header: { fontSize: 22, fontWeight: 'bold', color: '#6200ea', marginBottom: 10, textAlign: 'center' },
-  noBookings: { fontSize: 18, textAlign: 'center', marginTop: 20 },
-  bookingCard: {
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f4ecff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#6200ea',
+  },
+  bookingContainer: {
+    marginBottom: 20,
     backgroundColor: 'white',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 10,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     elevation: 5,
   },
-  title: { fontSize: 18, fontWeight: 'bold', color: '#333' },
-  qrContainer: { alignItems: 'center', marginTop: 10 }, // Center QR code
+  bookingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#6200ea',
+  },
+  detailsContainer: {
+    marginBottom: 10,
+  },
+  detailText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  qrContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  qrText: {
+    fontSize: 16,
+    marginTop: 10,
+    color: '#6200ea',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noBookingText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
+  },
 });
 
 export default BookingScreen;

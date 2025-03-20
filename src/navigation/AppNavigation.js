@@ -106,9 +106,9 @@ const MainStackNavigator = () => (
   <MainStack.Navigator screenOptions={{ headerShown: false }}>
     <MainStack.Screen name="MainTabs" component={MainTabs} />
     <MainStack.Screen name="Subscription" component={SubscriptionScreen} />
-    <Stack.Screen name="SlotSelection" component={SlotSelectionScreen} />
+    <MainStack.Screen name="SlotSelection" component={SlotSelectionScreen} />
     <MainStack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
-    <MainStack.Screen name="Bookings" component={BookingScreen} />
+    <MainStack.Screen name="Booking" component={BookingScreen} />
   </MainStack.Navigator>
 );
 

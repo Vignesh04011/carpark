@@ -1,22 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Import an icon library
 
 const MAX_SELECTABLE_SLOTS = 5;
 
 const SlotSelectionScreen = ({ route }) => {
   const { spot } = route.params;
   const navigation = useNavigation();
-
   const [slots, setSlots] = useState(
-    Array.from({ length: 20 }, (_, index) => ({
+    Array.from({ length: spot.spaces || 20 }, (_, index) => ({
       id: index + 1,
       reserved: false,
       selected: false,
     }))
   );
   const [loading, setLoading] = useState(true);
+  const [confirming, setConfirming] = useState(false);
 
   const reservedSlotsRef = useRef(new Set());
 
@@ -50,6 +51,7 @@ const SlotSelectionScreen = ({ route }) => {
         }
       } catch (error) {
         console.error('Error loading reserved slots:', error);
+        Alert.alert('Error', 'Failed to load slot availability.');
       } finally {
         setLoading(false);
       }
@@ -60,9 +62,10 @@ const SlotSelectionScreen = ({ route }) => {
 
   const handleSlotSelection = (id) => {
     const selectedSlotsCount = slots.filter((slot) => slot.selected).length;
+    const targetSlot = slots.find((slot) => slot.id === id);
 
-    if (selectedSlotsCount >= MAX_SELECTABLE_SLOTS && !slots.find((slot) => slot.id === id).selected) {
-      Alert.alert(`Limit Reached`, `You can only select up to ${MAX_SELECTABLE_SLOTS} slots.`);
+    if (selectedSlotsCount >= MAX_SELECTABLE_SLOTS && !targetSlot.selected) {
+      Alert.alert(`Limit Reached`, `You can select up to ${MAX_SELECTABLE_SLOTS} slots.`);
       return;
     }
 
@@ -77,20 +80,32 @@ const SlotSelectionScreen = ({ route }) => {
     const selectedSlots = slots.filter((slot) => slot.selected).map((slot) => slot.id);
 
     if (selectedSlots.length === 0) {
-      Alert.alert('Selection Required', 'Please select at least one slot.');
+      Alert.alert('No Slots Selected', 'Please select at least one slot.');
       return;
     }
+
+    setConfirming(true);
 
     try {
       await AsyncStorage.setItem(`selectedSlots_${spot.id}`, JSON.stringify(selectedSlots));
       navigation.navigate('ConfirmBooking', { selectedSlots, spot });
     } catch (error) {
-      console.error('Error saving selected slots:', error);
-      Alert.alert('Error', 'An error occurred while saving your selection. Please try again.');
+      console.error('Error saving slots:', error);
+      Alert.alert('Error', 'Failed to save your selection. Please try again.');
+    } finally {
+      setConfirming(false);
     }
   };
 
-  const chunkedSlots = [slots.slice(0, 10), slots.slice(10, 20)];
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
+
+  // Split slots into two columns dynamically
+  const chunkedSlots = [];
+  for (let i = 0; i < slots.length; i += Math.ceil(slots.length / 2)) {
+    chunkedSlots.push(slots.slice(i, i + Math.ceil(slots.length / 2)));
+  }
 
   if (loading) {
     return (
@@ -102,6 +117,11 @@ const SlotSelectionScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+        <Icon name="arrow-back" size={24} color="#6200ea" />
+      </TouchableOpacity>
+
       <Text style={styles.title}>Select Slots for {spot.name}</Text>
 
       {/* Slot Legend */}
@@ -120,7 +140,7 @@ const SlotSelectionScreen = ({ route }) => {
         </View>
       </View>
 
-      <Text style={styles.slotLimitText}>You can select up to {MAX_SELECTABLE_SLOTS} slots.</Text>
+      <Text style={styles.slotLimitText}>Maximum {MAX_SELECTABLE_SLOTS} slots per booking.</Text>
 
       {/* Slots Grid */}
       <View style={styles.slotsContainer}>
@@ -131,12 +151,22 @@ const SlotSelectionScreen = ({ route }) => {
                 key={slot.id}
                 style={[
                   styles.slot,
-                  slot.reserved ? styles.reservedSlot : slot.selected ? styles.selectedSlot : styles.availableSlot,
+                  slot.reserved 
+                    ? styles.reservedSlot 
+                    : slot.selected 
+                    ? styles.selectedSlot 
+                    : styles.availableSlot,
                 ]}
                 onPress={() => !slot.reserved && handleSlotSelection(slot.id)}
                 disabled={slot.reserved}
+                accessibilityLabel={`Slot ${slot.id} (${slot.reserved ? 'Reserved' : 'Available'})`}
               >
-                <Text style={styles.slotText}>{slot.id}</Text>
+                <Text style={[
+                  styles.slotText,
+                  slot.reserved && styles.reservedSlotText
+                ]}>
+                  {slot.id}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -144,13 +174,22 @@ const SlotSelectionScreen = ({ route }) => {
       </View>
 
       {/* Confirm Button */}
-      <TouchableOpacity style={styles.confirmButton} onPress={handleConfirmSelection}>
-        <Text style={styles.confirmButtonText}>Confirm Selection</Text>
+      <TouchableOpacity
+        style={[styles.confirmButton, confirming && styles.disabledButton]}
+        onPress={handleConfirmSelection}
+        disabled={confirming}
+      >
+        {confirming ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Text style={styles.confirmButtonText}>Confirm Selection</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
 };
 
+// Define the styles object
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -190,7 +229,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   slot: {
-    width: 70,
+    width: Dimensions.get('window').width * 0.4, // Responsive width
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
@@ -203,10 +242,11 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   reservedSlot: {
-    backgroundColor: 'red',
+    backgroundColor: 'red', // Booked slots are red
+    opacity: 0.8,
   },
   selectedSlot: {
-    backgroundColor: 'yellow',
+    backgroundColor: '#ffeb3b', // Selected slots are yellow
     borderWidth: 2,
     borderColor: '#ff9800',
   },
@@ -214,11 +254,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  reservedSlotText: {
+    color: 'white', // Text color for reserved slots
+  },
   confirmButton: {
     backgroundColor: '#6200ea',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
   confirmButtonText: {
     color: 'white',
@@ -235,6 +281,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 1,
   },
 });
 

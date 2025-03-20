@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Image, Text, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, Image, Text, Modal, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +16,7 @@ const MapScreen = () => {
     { id: 5, latitude: 18.8222, longitude: 73.2723, booked: false, name: "Private Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
   ]);
   const [loading, setLoading] = useState(true);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
   const navigation = useNavigation();
 
   const centerLocation = {
@@ -25,34 +26,36 @@ const MapScreen = () => {
     longitudeDelta: 0.01,
   };
 
-  useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        const storedWishlist = await AsyncStorage.getItem('WishlistedParking');
-        setWishlist(storedWishlist ? JSON.parse(storedWishlist) : []);
-      } catch (error) {
-        console.error('Error fetching wishlist:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchWishlist();
+  const fetchWishlist = useCallback(async () => {
+    try {
+      const storedWishlist = await AsyncStorage.getItem('WishlistedParking');
+      setWishlist(storedWishlist ? JSON.parse(storedWishlist) : []);
+    } catch (error) {
+      console.error('Error fetching wishlist:', error);
+      Alert.alert('Error', 'Unable to load wishlist. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const loadReservedSlots = async () => {
-      try {
-        const bookings = await AsyncStorage.getItem('bookings');
-        if (bookings) {
-          const parsedBookings = JSON.parse(bookings);
-          const now = new Date();
+    fetchWishlist();
+  }, [fetchWishlist]);
 
-          const activeBookings = parsedBookings.filter((booking) => {
-            const checkOutTime = new Date(booking.checkOutTime);
-            return checkOutTime > now;
-          });
+  const loadReservedSlots = useCallback(async () => {
+    try {
+      const bookings = await AsyncStorage.getItem('bookings');
+      if (bookings) {
+        const parsedBookings = JSON.parse(bookings);
+        const now = new Date();
 
-          const updatedParkingSpots = parkingSpots.map((spot) => {
+        const activeBookings = parsedBookings.filter((booking) => {
+          const checkOutTime = new Date(booking.checkOutTime);
+          return checkOutTime > now;
+        });
+
+        setParkingSpots((prevSpots) =>
+          prevSpots.map((spot) => {
             const reservedSlots = activeBookings
               .filter((booking) => booking.spotId === spot.id)
               .flatMap((booking) => booking.selectedSlots);
@@ -61,20 +64,22 @@ const MapScreen = () => {
               ...spot,
               booked: reservedSlots.length >= spot.spaces,
             };
-          });
+          })
+        );
 
-          setParkingSpots(updatedParkingSpots);
-          await AsyncStorage.setItem('bookings', JSON.stringify(activeBookings));
-        }
-      } catch (error) {
-        console.error('Error loading reserved slots:', error);
+        await AsyncStorage.setItem('bookings', JSON.stringify(activeBookings));
       }
-    };
+    } catch (error) {
+      console.error('Error loading reserved slots:', error);
+      Alert.alert('Error', 'Unable to load reserved slots. Please try again.');
+    }
+  }, []);
 
+  useEffect(() => {
     const interval = setInterval(loadReservedSlots, 60000);
     loadReservedSlots();
     return () => clearInterval(interval);
-  }, []);
+  }, [loadReservedSlots]);
 
   const handleMarkerPress = (spot) => {
     setSelectedSpot(spot);
@@ -84,14 +89,12 @@ const MapScreen = () => {
   const handleBookSlot = () => {
     setModalVisible(false);
     if (selectedSpot) {
-      console.log('Navigating to SlotSelection with:', selectedSpot);
       navigation.navigate('SlotSelection', { spot: selectedSpot });
-    } else {
-      console.log('Selected spot is null');
     }
   };
 
   const toggleWishlist = async (spot) => {
+    setWishlistLoading(true);
     try {
       let updatedWishlist;
       if (wishlist.some((item) => item.id === spot.id)) {
@@ -104,6 +107,9 @@ const MapScreen = () => {
       await AsyncStorage.setItem('WishlistedParking', JSON.stringify(updatedWishlist));
     } catch (error) {
       console.error('Error updating wishlist:', error);
+      Alert.alert('Error', 'Unable to update wishlist. Please try again.');
+    } finally {
+      setWishlistLoading(false);
     }
   };
 
@@ -122,7 +128,17 @@ const MapScreen = () => {
       <MapView style={styles.map} initialRegion={centerLocation}>
         {parkingSpots.map((spot) => (
           <Marker key={spot.id} coordinate={{ latitude: spot.latitude, longitude: spot.longitude }} onPress={() => handleMarkerPress(spot)}>
-            <Image source={spot.booked ? require('../assets/icons/parking-lot1.png') : require('../assets/icons/parking-lot.png')} style={{ width: 40, height: 40 }} resizeMode="contain" />
+            <Image
+              source={
+                isWishlisted(spot)
+                  ? require('../assets/icons/default.png') // Use a different icon for wishlisted spots
+                  : spot.booked
+                  ? require('../assets/icons/parking-lot1.png')
+                  : require('../assets/icons/parking-lot.png')
+              }
+              style={{ width: 40, height: 40 }}
+              resizeMode="contain"
+            />
           </Marker>
         ))}
       </MapView>
@@ -151,8 +167,23 @@ const MapScreen = () => {
                     </TouchableOpacity>
                   )}
 
-                  <TouchableOpacity onPress={() => toggleWishlist(selectedSpot)} style={styles.wishlistButton}>
-                    <Image source={isWishlisted(selectedSpot) ? require('../assets/icons/heart-filled.png') : require('../assets/icons/heart-outline.png')} style={styles.heartIcon} />
+                  <TouchableOpacity
+                    onPress={() => toggleWishlist(selectedSpot)}
+                    style={styles.wishlistButton}
+                    disabled={wishlistLoading}
+                  >
+                    {wishlistLoading ? (
+                      <ActivityIndicator size="small" color="red" />
+                    ) : (
+                      <Image
+                        source={
+                          isWishlisted(selectedSpot)
+                            ? require('../assets/icons/heart-filled.png')
+                            : require('../assets/icons/heart-outline.png')
+                        }
+                        style={styles.heartIcon}
+                      />
+                    )}
                   </TouchableOpacity>
                 </View>
               </>
