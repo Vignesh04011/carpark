@@ -37,6 +37,10 @@ const ProfileScreen = ({ navigation }) => {
     });
   };
 
+  const handleRateApp = () => {
+    navigation.navigate('RateApp');
+  };
+  
   const handleLogout = () => {
     Alert.alert(
       "Confirm Logout",
@@ -106,11 +110,14 @@ const ProfileScreen = ({ navigation }) => {
         {/* Others Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Others</Text>
-          <ProfileItem icon={require('../assets/icons/setting.png')} text="Settings" onPress={() => navigation.navigate('Settings')} />
-          <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={() => console.log("Rate App Pressed")} />
+          <ProfileItem icon={require('../assets/icons/language.png')} text="Change Language" onPress={() => console.log("Change Language Pressed")} />
+          <ProfileItem icon={require('../assets/icons/about.png')} text="About Us" onPress={() => console.log("About Pressed")} />
+          <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={handleRateApp} />
           <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" onPress={() => console.log("Terms & Conditions Pressed")} />
           <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={handleLogout} />
         </View>
+
+        <Image source={require('../assets/images/footer.png')} style={styles.footerImage} />
 
       </View>
     </ScrollView>
@@ -218,6 +225,12 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  footerImage: {
+    width: '90%',
+    height: 250,
+    marginTop: 20,
+    resizeMode: 'contain',
   },
 });
 

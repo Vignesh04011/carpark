@@ -16,6 +16,7 @@ import UserProfileScreen from '../screens/UserProfileScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import WishlistedParkingScreen from '../screens/WishlistedParkingScreen';
 import ConfirmBookingScreen from '../screens/ConfirmBookingScreen';
+import RateAppScreen from '../screens/RateAppScreen';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -64,6 +65,7 @@ const ProfileStack = () => (
     <Stack.Screen name="WishlistedParking" component={WishlistedParkingScreen} options={{ headerTitle: 'Wishlisted Parking' }} />
     <Stack.Screen name="UserProfile" component={UserProfileScreen} />
     <Stack.Screen name="Settings" component={SettingsScreen} />
+    <Stack.Screen name="RateApp" component={RateAppScreen} />
   </Stack.Navigator>
 );
 
