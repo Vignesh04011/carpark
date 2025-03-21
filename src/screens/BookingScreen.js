@@ -1,73 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
+import LinearGradient from 'react-native-linear-gradient';
+import PromotionsBanner from '../components/PromotionsBanner';
 
-const BookingScreen = () => {
-  const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+const HomeScreen = () => {
+  const navigation = useNavigation();
+  const [latestBooking, setLatestBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const fetchBookings = async () => {
+  const fetchLatestBooking = async () => {
     try {
-      const storedBookings = await AsyncStorage.getItem('bookings');
-      if (storedBookings) {
-        const parsedBookings = JSON.parse(storedBookings);
-
-        // Sort bookings by checkInTime in descending order (latest first)
-        const sortedBookings = parsedBookings.sort((a, b) => {
-          return new Date(b.checkInTime) - new Date(a.checkInTime);
-        });
-
-        setBookings(sortedBookings);
-
-        // Save the latest booking to AsyncStorage
-        if (sortedBookings.length > 0) {
-          await AsyncStorage.setItem('latestBooking', JSON.stringify(sortedBookings[0]));
-        }
+      const bookingData = await AsyncStorage.getItem('latestBooking');
+      if (bookingData) {
+        const parsedBooking = JSON.parse(bookingData);
+        setLatestBooking(parsedBooking);
       }
     } catch (error) {
-      console.error('Error fetching bookings:', error);
-      Alert.alert('Error', 'Unable to load bookings. Please try again.');
+      console.error('Error fetching latest booking:', error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchBookings();
-  };
-
-  const handleNewBooking = async () => {
-    const newBooking = {
-      id: `booking-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID
-      spotName: 'Apartment Parking',
-      carType: 'SUV',
-      numberPlate: 'MH03BH5467',
-      checkInTime: new Date().toISOString(),
-      checkOutTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(), // 1 hour later
-      qrCodeValue: JSON.stringify({ bookingId: `booking-${Math.random().toString(36).substr(2, 9)}` }), // Store JSON data in QR code
-    };
-
-    try {
-      const updatedBookings = [newBooking, ...bookings];
-      await AsyncStorage.setItem('bookings', JSON.stringify(updatedBookings));
-      setBookings(updatedBookings);
-
-      // Save the latest booking to AsyncStorage
-      await AsyncStorage.setItem('latestBooking', JSON.stringify(newBooking));
-      Alert.alert('Success', 'New booking created successfully!');
-    } catch (error) {
-      console.error('Error creating booking:', error);
-      Alert.alert('Error', 'Failed to create booking. Please try again.');
-    }
-  };
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchLatestBooking();
+    }, [])
+  );
 
   if (loading) {
     return (
@@ -78,114 +40,156 @@ const BookingScreen = () => {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#6200ea']} />
-      }
-    >
-      <Text style={styles.title}>Your Bookings</Text>
+    <ScrollView style={styles.container}>
+      <LinearGradient colors={['#6200ea', '#3700b3']} style={styles.headerContainer}>
+        <Text style={styles.headerText}>CarPark</Text>
+      </LinearGradient>
 
-      {bookings.length > 0 ? (
-        bookings.map((booking) => (
-          <View key={booking.id} style={styles.bookingContainer}>
-            <Text style={styles.bookingTitle}>Booking ID: {booking.id}</Text>
-            <View style={styles.detailsContainer}>
-              <Text style={styles.detailText}>Parking: {booking.spotName}</Text>
-              <Text style={styles.detailText}>Vehicle: {booking.carType}</Text>
-              <Text style={styles.detailText}>Number Plate: {booking.numberPlate}</Text>
-              <Text style={styles.detailText}>Check-In: {new Date(booking.checkInTime).toLocaleString()}</Text>
-              <Text style={styles.detailText}>Check-Out: {new Date(booking.checkOutTime).toLocaleString()}</Text>
-            </View>
+      <PromotionsBanner />
 
-            {/* QR Code */}
-            <View style={styles.qrContainer}>
-              <QRCode
-                value={booking.qrCodeValue} // Use the saved JSON QR code value
-                size={200}
-              />
-              <Text style={styles.qrText}>Scan this QR code for verification</Text>
-            </View>
+      {latestBooking ? (
+        <View style={styles.activeSessionCard}>
+          <Text style={styles.sessionHeader}>Active Parking Session</Text>
+
+          {/* QR Code */}
+          <View style={styles.qrContainer}>
+            <QRCode value={latestBooking.qrCodeValue} size={150} />
           </View>
-        ))
+
+          {/* Number Plate Below QR Code */}
+          <Text style={[styles.text, styles.numberPlateText]}>
+            <Text style={styles.bold}>Number Plate:</Text> {latestBooking.numberPlate}
+          </Text>
+
+          {/* Parking Details */}
+          <View style={styles.textContainer}>
+            <Text style={styles.text}><Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}</Text>
+            <Text style={styles.text}><Text style={styles.bold}>Vehicle:</Text> {latestBooking.carType}</Text>
+            <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(latestBooking.checkInTime).toLocaleString()}</Text>
+            <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(latestBooking.checkOutTime).toLocaleString()}</Text>
+          </View>
+        </View>
       ) : (
-        <Text style={styles.noBookingText}>No bookings found.</Text>
+        <Text style={styles.noBookingText}>No active parking session.</Text>
       )}
 
-      {/* Button to create a new booking */}
-      <TouchableOpacity style={styles.newBookingButton} onPress={handleNewBooking}>
-        <Text style={styles.newBookingButtonText}>Create New Booking</Text>
-      </TouchableOpacity>
+      {/* Buttons */}
+      <View style={styles.buttonContainer}>
+        <GradientButton text="Subscribe Now" onPress={() => navigation.navigate('Subscription')} />
+      </View>
+      <View style={styles.buttonContainer}>
+        <GradientButton text="EV Station" onPress={() => navigation.navigate('EVStation')} />
+      </View>
+      <View style={styles.buttonContainer}>
+        <GradientButton text="Enter Vehicle Number" onPress={() => navigation.navigate('EnterVehicleScreen')} />
+      </View>
     </ScrollView>
   );
 };
 
+const GradientButton = ({ text, onPress }) => (
+  <TouchableOpacity style={styles.button} onPress={onPress}>
+    <View style={styles.gradientButton}>
+      <Text style={styles.buttonText}>{text}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#f4ecff',
+    backgroundColor: '#EDEDED',
+    paddingTop: 10,
   },
-  title: {
+  headerContainer: {
+    padding: 20,
+    alignItems: 'center',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  headerText: {
+    color: 'white',
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#6200ea',
   },
-  bookingContainer: {
-    marginBottom: 20,
-    backgroundColor: 'white',
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
+  activeSessionCard: {
+    marginBottom: 30,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 20,
     elevation: 5,
+    marginHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    alignItems: 'center', // Centering QR Code
   },
-  bookingTitle: {
+  sessionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#333',
     marginBottom: 10,
-    color: '#6200ea',
-  },
-  detailsContainer: {
-    marginBottom: 10,
-  },
-  detailText: {
-    fontSize: 16,
-    marginBottom: 5,
   },
   qrContainer: {
     alignItems: 'center',
-    marginTop: 10,
+    marginBottom: 10, // Space between QR Code and Number Plate
   },
-  qrText: {
+  numberPlateText: {
+    textAlign: 'center',
     fontSize: 16,
-    marginTop: 10,
-    color: '#6200ea',
+    color: '#555',
+    marginBottom: 10, // Spacing between Number Plate and other details
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  textContainer: {
+    width: '100%',
+  },
+  text: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'center',
+  },
+  bold: {
+    fontWeight: 'bold',
   },
   noBookingText: {
     fontSize: 18,
     textAlign: 'center',
     marginTop: 20,
   },
-  newBookingButton: {
-    backgroundColor: '#6200ea',
-    padding: 15,
-    borderRadius: 10,
+  buttonContainer: {
     alignItems: 'center',
-    marginTop: 20,
+    marginBottom: 20,
   },
-  newBookingButtonText: {
-    color: 'white',
-    fontSize: 16,
+  button: {
+    width: '90%',
+    borderRadius: 25,
+    overflow: 'hidden',
+    elevation: 5,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  gradientButton: {
+    padding: 20,
+    alignItems: 'center',
+    borderRadius: 25,
+    backgroundColor: 'white',
+  },
+  buttonText: {
+    color: 'red',
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
-export default BookingScreen;
+export default HomeScreen;

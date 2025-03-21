@@ -1,5 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Animated,
+  Easing,
+} from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
@@ -10,6 +19,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const [latestBooking, setLatestBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const buttonScale = new Animated.Value(1);
 
   const fetchLatestBooking = async () => {
     try {
@@ -26,10 +36,24 @@ const HomeScreen = () => {
   };
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       fetchLatestBooking();
     }, [])
   );
+
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
 
   if (loading) {
     return (
@@ -40,7 +64,12 @@ const HomeScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      bounces={true}
+      showsVerticalScrollIndicator={false}
+    >
       <LinearGradient colors={['#6200ea', '#3700b3']} style={styles.headerContainer}>
         <Text style={styles.headerText}>CarPark</Text>
       </LinearGradient>
@@ -77,28 +106,56 @@ const HomeScreen = () => {
         <Text style={styles.noBookingText}>No active parking session.</Text>
       )}
 
-      {/* Buttons without Icons */}
-      <View style={styles.buttonContainer}>
-        <GradientButton text="Subscribe Now" onPress={() => navigation.navigate('Subscription')} />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <GradientButton text="EV Station" onPress={() => navigation.navigate('EVStation')} />
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <GradientButton text="Enter Vehicle Number" onPress={() => navigation.navigate('EnterVehicleScreen')} />
-      </View>
+      {/* Buttons with Advanced Styling */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.buttonScrollContainer}
+      >
+        <GradientButton
+          text="Subscribe Now"
+          onPress={() => navigation.navigate('Subscription')}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          scale={buttonScale}
+        />
+        <GradientButton
+          text="EV Station"
+          onPress={() => navigation.navigate('EVStation')}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          scale={buttonScale}
+        />
+        <GradientButton
+          text="Enter Vehicle Number"
+          onPress={() => navigation.navigate('EnterVehicleScreen')}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          scale={buttonScale}
+        />
+      </ScrollView>
     </ScrollView>
   );
 };
 
-const GradientButton = ({ text, onPress }) => (
-  <TouchableOpacity style={styles.button} onPress={onPress}>
-    <View style={styles.gradientButton}>
-      <Text style={styles.buttonText}>{text}</Text>
-    </View>
-  </TouchableOpacity>
+const GradientButton = ({ text, onPress, onPressIn, onPressOut, scale }) => (
+  <Animated.View style={{ transform: [{ scale }] }}>
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      activeOpacity={0.8}
+    >
+      <LinearGradient
+        colors={['#6200ea', '#3700b3']}
+        style={styles.gradientButton}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Text style={styles.buttonText}>{text}</Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  </Animated.View>
 );
 
 const styles = StyleSheet.create({
@@ -106,6 +163,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#EDEDED',
     paddingTop: 10,
+  },
+  scrollContent: {
+    paddingBottom: 30,
   },
   headerContainer: {
     padding: 20,
@@ -170,27 +230,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  buttonContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    width: '90%',
-    borderRadius: 25,
-    overflow: 'hidden',
-    elevation: 5,
-    borderWidth: 2,
-    borderColor: 'white',
+  buttonScrollContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 10,
   },
   gradientButton: {
-    padding: 20,
-    alignItems: 'center',
+    width: 160,
     borderRadius: 25,
-    backgroundColor: 'white',
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 15,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   buttonText: {
-    color: 'red',
-    fontSize: 18,
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   loadingContainer: {
