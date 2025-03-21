@@ -10,10 +10,10 @@ const MapScreen = () => {
   const [wishlist, setWishlist] = useState([]);
   const [parkingSpots, setParkingSpots] = useState([
     { id: 1, latitude: 18.8211, longitude: 73.2705, booked: true, name: "Parking A", address: "Sector 44A, Chembur, Mumbai", spaces: 0, price: 80, rating: 4.5, image: require('../assets/images/ParkingA.png') },
-    { id: 2, latitude: 18.8205, longitude: 73.2720, booked: false, name: "Corporate Parking", address: "Main Street, Khalapur", spaces: 50, price: 100, rating: 3.8, image: require('../assets/images/ParkingB.png') },
-    { id: 3, latitude: 18.8199, longitude: 73.2715, booked: false, name: "Apartment Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
+    { id: 2, latitude: 18.8205, longitude: 73.2720, booked: false, name: "Corporate Parking", address: "Main Street, Khalapur", spaces: 50, price: 100, rating: 3.8, image: require('../assets/images/corporate.png') },
+    { id: 3, latitude: 18.8199, longitude: 73.2715, booked: false, name: "Apartment Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/apartment.png') },
     { id: 4, latitude: 18.8220, longitude: 73.2708, booked: true, name: "Parking D", address: "Near Mall, Khalapur", spaces: 0, price: 90, rating: 3.5, image: require('../assets/images/ParkingB.png') },
-    { id: 5, latitude: 18.8222, longitude: 73.2723, booked: false, name: "Private Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/ParkingA.png') },
+    { id: 5, latitude: 18.8222, longitude: 73.2723, booked: false, name: "Private Parking", address: "Market Road, Khalapur", spaces: 20, price: 70, rating: 4.2, image: require('../assets/images/private.png') },
   ]);
   const [loading, setLoading] = useState(true);
   const [wishlistLoading, setWishlistLoading] = useState(false);
