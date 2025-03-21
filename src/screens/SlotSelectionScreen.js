@@ -1,17 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ScrollView,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Import an icon library
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MAX_SELECTABLE_SLOTS = 5;
+const { width, height } = Dimensions.get('window');
 
 const SlotSelectionScreen = ({ route }) => {
   const { spot } = route.params;
   const navigation = useNavigation();
   const [slots, setSlots] = useState(
-    Array.from({ length: spot.spaces || 20 }, (_, index) => ({
+    Array.from({ length: 20 }, (_, index) => ({
       id: index + 1,
+      label: `Table ${index + 1}`, // Use meaningful labels like "Table 1", "Cubicle A", etc.
       reserved: false,
       selected: false,
     }))
@@ -116,13 +127,13 @@ const SlotSelectionScreen = ({ route }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       {/* Back Button */}
       <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-        <Icon name="arrow-back" size={24} color="#6200ea" />
+        <Icon name="arrow-back" size={30} color="#6200ea" />
       </TouchableOpacity>
 
-      <Text style={styles.title}>Select Slots for {spot.name}</Text>
+      <Text style={styles.title}>Select Tables for {spot.name}</Text>
 
       {/* Slot Legend */}
       <View style={styles.legendContainer}>
@@ -140,7 +151,7 @@ const SlotSelectionScreen = ({ route }) => {
         </View>
       </View>
 
-      <Text style={styles.slotLimitText}>Maximum {MAX_SELECTABLE_SLOTS} slots per booking.</Text>
+      <Text style={styles.slotLimitText}>Maximum {MAX_SELECTABLE_SLOTS} tables per booking.</Text>
 
       {/* Slots Grid */}
       <View style={styles.slotsContainer}>
@@ -151,21 +162,18 @@ const SlotSelectionScreen = ({ route }) => {
                 key={slot.id}
                 style={[
                   styles.slot,
-                  slot.reserved 
-                    ? styles.reservedSlot 
-                    : slot.selected 
-                    ? styles.selectedSlot 
+                  slot.reserved
+                    ? styles.reservedSlot
+                    : slot.selected
+                    ? styles.selectedSlot
                     : styles.availableSlot,
                 ]}
                 onPress={() => !slot.reserved && handleSlotSelection(slot.id)}
                 disabled={slot.reserved}
                 accessibilityLabel={`Slot ${slot.id} (${slot.reserved ? 'Reserved' : 'Available'})`}
               >
-                <Text style={[
-                  styles.slotText,
-                  slot.reserved && styles.reservedSlotText
-                ]}>
-                  {slot.id}
+                <Text style={[styles.slotText, slot.reserved && styles.reservedSlotText]}>
+                  {slot.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -185,18 +193,19 @@ const SlotSelectionScreen = ({ route }) => {
           <Text style={styles.confirmButtonText}>Confirm Selection</Text>
         )}
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 // Define the styles object
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
+    paddingTop: 50, // Add padding for the back button
   },
   title: {
-    fontSize: 24,
+    fontSize: width * 0.06, // Responsive font size
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
@@ -211,13 +220,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   legendColor: {
-    width: 20,
-    height: 20,
+    width: width * 0.05, // Responsive width
+    height: width * 0.05, // Responsive height
     borderRadius: 5,
     marginRight: 5,
   },
   legendText: {
-    fontSize: 16,
+    fontSize: width * 0.04, // Responsive font size
   },
   slotsContainer: {
     flexDirection: 'row',
@@ -229,8 +238,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   slot: {
-    width: Dimensions.get('window').width * 0.4, // Responsive width
-    height: 50,
+    width: width * 0.4, // Responsive width
+    height: width * 0.15, // Responsive height
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
@@ -242,20 +251,20 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
   },
   reservedSlot: {
-    backgroundColor: 'red', // Booked slots are red
+    backgroundColor: 'red',
     opacity: 0.8,
   },
   selectedSlot: {
-    backgroundColor: '#ffeb3b', // Selected slots are yellow
+    backgroundColor: '#ffeb3b',
     borderWidth: 2,
     borderColor: '#ff9800',
   },
   slotText: {
-    fontSize: 16,
+    fontSize: width * 0.04, // Responsive font size
     fontWeight: 'bold',
   },
   reservedSlotText: {
-    color: 'white', // Text color for reserved slots
+    color: 'white',
   },
   confirmButton: {
     backgroundColor: '#6200ea',
@@ -268,11 +277,11 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: width * 0.04, // Responsive font size
     fontWeight: 'bold',
   },
   slotLimitText: {
-    fontSize: 16,
+    fontSize: width * 0.04, // Responsive font size
     textAlign: 'center',
     marginBottom: 10,
     color: '#6200ea',
