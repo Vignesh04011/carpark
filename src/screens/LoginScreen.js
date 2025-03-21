@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
-import { RadioButton } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("normal");
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -41,20 +39,6 @@ const LoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Logo */}
       <Image source={require("../assets/images/app_logo.png")} style={styles.logo} />
-
-      {/* User Type Selection */}
-      <View style={styles.radioContainer}>
-        <RadioButton.Group onValueChange={(value) => setUserType(value)} value={userType}>
-          <View style={styles.radioOption}>
-            <RadioButton value="normal" color="#613EEA" />
-            <Text style={styles.radioText}>Normal User</Text>
-          </View>
-          <View style={styles.radioOption}>
-            <RadioButton value="owner" color="#613EEA" />
-            <Text style={styles.radioText}>Space Owner</Text>
-          </View>
-        </RadioButton.Group>
-      </View>
 
       {/* Email Input */}
       <View style={styles.inputContainer}>
@@ -109,30 +93,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     resizeMode: "contain",
-    marginBottom: 15,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#613EEA",
-    marginBottom: 25,
-  },
-  radioContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 20,
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 20,
-  },
-  radioText: {
-    fontSize: 16,
-    fontWeight: "500",
+    marginBottom: 55,
   },
   inputContainer: {
     flexDirection: "row",

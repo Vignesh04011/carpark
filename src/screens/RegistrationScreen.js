@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
-import { RadioButton } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const RegisterScreen = ({ navigation }) => {
@@ -8,7 +7,6 @@ const RegisterScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [userType, setUserType] = useState("normal");
 
   const handleRegister = async () => {
     if (!username || !email || !phone || !password) {
@@ -21,8 +19,7 @@ const RegisterScreen = ({ navigation }) => {
       username,
       email,
       phone,
-      password, // Include password in the userData object
-      userType,
+      password,
     };
 
     try {
@@ -45,19 +42,6 @@ const RegisterScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* Logo image */}
       <Image source={require("../assets/images/app_logo.png")} style={styles.logo} />
-
-      <View style={styles.radioContainer}>
-        <RadioButton.Group onValueChange={(value) => setUserType(value)} value={userType}>
-          <View style={styles.radioOption}>
-            <RadioButton value="normal" color="#613EEA" />
-            <Text style={styles.radioText}>Normal User</Text>
-          </View>
-          <View style={styles.radioOption}>
-            <RadioButton value="owner" color="#613EEA" />
-            <Text style={styles.radioText}>Space Owner</Text>
-          </View>
-        </RadioButton.Group>
-      </View>
 
       <View style={styles.inputContainer}>
         <Image source={require("../assets/icons/user.png")} style={styles.icon} />
@@ -130,29 +114,6 @@ const styles = StyleSheet.create({
     height: 150,
     resizeMode: "contain",
     marginBottom: 15,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#613EEA",
-    marginBottom: 25,
-  },
-  radioContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 20,
-  },
-  radioOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 20,
-  },
-  radioText: {
-    fontSize: 16,
-    fontWeight: "500",
   },
   inputContainer: {
     flexDirection: "row",

@@ -22,6 +22,8 @@ import SplashScreen from '../screens/SplashScreen';
 import SlotSelectionScreen from '../screens/SlotSelectionScreen';
 import EnterVehicleScreen from '../screens/EnterVehicleScreen'; // Corrected import path
 import { WalletProvider } from '../context/WalletContext';
+import AboutScreen from '../screens/AboutScreen';
+import TermsScreen from '../screens/TermsScreen';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -74,6 +76,8 @@ const ProfileStack = () => (
     <Stack.Screen name="UserProfile" component={UserProfileScreen} />
     <Stack.Screen name="Settings" component={SettingsScreen} />
     <Stack.Screen name="RateApp" component={RateAppScreen} />
+    <Stack.Screen name="About" component={AboutScreen} />
+    <Stack.Screen name="Terms" component={TermsScreen} />
   </Stack.Navigator>
 );
 
@@ -82,8 +86,8 @@ const tabBarIcon = (icon) => ({ focused }) => (
     <Image
       source={icon}
       style={{
-        width: 25,
-        height: 25,
+        width: 35,
+        height: 35,
         bottom: -20,
         tintColor: focused ? '#6200ea' : '#B0B0B0',
       }}

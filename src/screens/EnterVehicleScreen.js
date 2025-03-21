@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   },
   headerText: { color: "white", fontSize: 22, fontWeight: "bold" },
 
-  subText: { fontSize: 14, textAlign: "center", color: "#666", marginBottom: 20 },
+  subText: { fontSize: 16, textAlign: "center", color: "#666", marginBottom: 20 },
   bold: { fontWeight: "bold" },
 
   /* Input Styling */

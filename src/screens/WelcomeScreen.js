@@ -91,14 +91,15 @@ const styles = StyleSheet.create({
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 25,
+    borderRadius: 55,
     backgroundColor: 'transparent',
     borderWidth: 2,
     borderColor: '#FFF',
   },
   logo: {
-    width: 30,
-    height: 30,
+    width: 80,
+    height: 80,
+    marginTop: 80,
   },
   pagination: {
     flexDirection: 'row',

@@ -52,7 +52,7 @@ const BookingScreen = () => {
       numberPlate: 'MH03BH5467',
       checkInTime: new Date().toISOString(),
       checkOutTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(), // 1 hour later
-      qrCodeValue: `booking-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique QR code value
+      qrCodeValue: JSON.stringify({ bookingId: `booking-${Math.random().toString(36).substr(2, 9)}` }), // Store JSON data in QR code
     };
 
     try {
@@ -101,7 +101,7 @@ const BookingScreen = () => {
             {/* QR Code */}
             <View style={styles.qrContainer}>
               <QRCode
-                value={booking.qrCodeValue} // Use the saved QR code value
+                value={booking.qrCodeValue} // Use the saved JSON QR code value
                 size={200}
               />
               <Text style={styles.qrText}>Scan this QR code for verification</Text>

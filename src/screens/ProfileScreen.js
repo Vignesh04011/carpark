@@ -2,31 +2,27 @@ import React, { useEffect, useState } from 'react';
 import { 
   View, Text, Image, TouchableOpacity, ScrollView, StyleSheet, Linking, Alert 
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../navigation/AppNavigation';
 
 const ProfileScreen = ({ navigation }) => {
   const [walletBalance, setWalletBalance] = useState(0);
-  const [transactions, setTransactions] = useState([]);
-  const [userData, setUserData] = useState({ username: '', email: '', phone: '' }); // State for user data
+  const [userData, setUserData] = useState({ username: '', email: '', phone: '' });
   const { logout } = useAuth();  
 
-  // Fetch wallet balance and user data when screen is focused
   useFocusEffect(
     React.useCallback(() => {
       const fetchData = async () => {
         try {
-          // Fetch wallet balance
           const balance = await AsyncStorage.getItem('walletBalance');
           if (balance) {
-            setWalletBalance(parseFloat(balance)); // Convert string to number
+            setWalletBalance(parseFloat(balance));
           }
 
-          // Fetch user data
           const storedUserData = await AsyncStorage.getItem('userData');
           if (storedUserData) {
-            setUserData(JSON.parse(storedUserData)); // Parse the string back to an object
+            setUserData(JSON.parse(storedUserData));
           }
         } catch (error) {
           console.log("Error fetching data", error);
@@ -75,9 +71,9 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.profileCard}>
           <Image source={require('../assets/icons/carpark.png')} style={styles.logo} />
           <View>
-            <Text style={styles.userName}>{userData.username}</Text> {/* Display username */}
-            <Text style={styles.email}>{userData.email}</Text> {/* Display email */}
-            <Text style={styles.phone}>{userData.phone}</Text> {/* Display phone number */}
+            <Text style={styles.userName}>{userData.username}</Text>
+            <Text style={styles.email}>{userData.email}</Text>
+            <Text style={styles.phone}>{userData.phone}</Text>
             <Text style={styles.balance}>₹ {walletBalance.toFixed(2)}</Text>
           </View>
         </View>
@@ -97,7 +93,6 @@ const ProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-
         {/* My Activity Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>My Activity</Text>
@@ -109,10 +104,10 @@ const ProfileScreen = ({ navigation }) => {
         {/* Others Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>Others</Text>
-          <ProfileItem icon={require('../assets/icons/language.png')} text="Change Language" onPress={() => console.log("Change Language Pressed")} />
-          <ProfileItem icon={require('../assets/icons/about.png')} text="About Us" onPress={() => console.log("About Pressed")} />
-          <ProfileItem icon={require('../assets/icons/rate.png')} text="Rate App" onPress={handleRateApp} />
-          <ProfileItem icon={require('../assets/icons/terms.png')} text="Terms & Conditions" onPress={() => console.log("Terms & Conditions Pressed")} />
+          <ProfileItem icon={require('../assets/icons/Change-language.png')} text="Change Language" onPress={() => console.log("Change Language Pressed")} />
+          <ProfileItem icon={require('../assets/icons/about.png')} text="About Us" onPress={() => navigation.navigate('About')} />
+          <ProfileItem icon={require('../assets/icons/rating.png')} text="Rate App" onPress={handleRateApp} />
+          <ProfileItem icon={require('../assets/icons/terms-and-conditions.png')} text="Terms & Conditions" onPress={() => navigation.navigate('Terms')} />
           <ProfileItem icon={require('../assets/icons/logout.png')} text="Logout" onPress={handleLogout} />
         </View>
 
@@ -124,12 +119,12 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 // Reusable Profile Item Component
-const ProfileItem = ({ icon, text, onPress }) => (
+const ProfileItem = React.memo(({ icon, text, onPress }) => (
   <TouchableOpacity style={styles.item} onPress={onPress}>
     <Image source={icon} style={styles.itemIcon} />
     <Text style={styles.itemText}>{text}</Text>
   </TouchableOpacity>
-);
+));
 
 const styles = StyleSheet.create({
   scrollContainer: {

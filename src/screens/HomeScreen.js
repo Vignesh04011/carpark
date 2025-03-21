@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
@@ -25,7 +25,6 @@ const HomeScreen = () => {
     }
   };
 
-  // Fetch latest booking when the screen is focused
   useFocusEffect(
     React.useCallback(() => {
       fetchLatestBooking();
@@ -42,27 +41,19 @@ const HomeScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header with Gradient */}
       <LinearGradient colors={['#6200ea', '#3700b3']} style={styles.headerContainer}>
         <Text style={styles.headerText}>CarPark</Text>
       </LinearGradient>
 
-      {/* Promotions & Offers */}
       <PromotionsBanner />
 
-      {/* Latest Booking */}
       {latestBooking ? (
         <View style={styles.activeSessionCard}>
           <View style={styles.sessionHeaderContainer}>
             <Text style={styles.sessionHeader}>Active Parking Session</Text>
           </View>
           <View style={styles.sessionContent}>
-            {/* QR Code */}
-            <QRCode
-              value={latestBooking.qrCodeValue}
-              size={150}
-            />
-            {/* Booking Details */}
+            <QRCode value={latestBooking.qrCodeValue} size={150} />
             <View style={styles.textContainer}>
               <View style={styles.detailRow}>
                 <Text style={styles.text}><Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}</Text>
@@ -86,39 +77,27 @@ const HomeScreen = () => {
         <Text style={styles.noBookingText}>No active parking session.</Text>
       )}
 
-      {/* Buttons */}
+      {/* Buttons without Icons */}
       <View style={styles.buttonContainer}>
-        <GradientButton
-          colors={['#6200ea', '#3700b3']}
-          text="Subscribe Now"
-          onPress={() => navigation.navigate('Subscription')}
-        />
+        <GradientButton text="Subscribe Now" onPress={() => navigation.navigate('Subscription')} />
       </View>
 
       <View style={styles.buttonContainer}>
-        <GradientButton
-          colors={['#4A90E2', '#1E90FF']}
-          text="EV Station"
-          onPress={() => navigation.navigate('EVStation')}
-        />
+        <GradientButton text="EV Station" onPress={() => navigation.navigate('EVStation')} />
       </View>
 
       <View style={styles.buttonContainer}>
-        <GradientButton
-          colors={['#FF5733', '#C70039']}
-          text="Enter Vehicle Number"
-          onPress={() => navigation.navigate('EnterVehicleScreen')}
-        />
+        <GradientButton text="Enter Vehicle Number" onPress={() => navigation.navigate('EnterVehicleScreen')} />
       </View>
     </ScrollView>
   );
 };
 
-const GradientButton = ({ colors, text, onPress }) => (
+const GradientButton = ({ text, onPress }) => (
   <TouchableOpacity style={styles.button} onPress={onPress}>
-    <LinearGradient colors={colors} style={styles.gradientButton}>
+    <View style={styles.gradientButton}>
       <Text style={styles.buttonText}>{text}</Text>
-    </LinearGradient>
+    </View>
   </TouchableOpacity>
 );
 
@@ -196,19 +175,22 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    width: '80%',
-    borderRadius: 15,
+    width: '90%',
+    borderRadius: 25,
     overflow: 'hidden',
     elevation: 5,
+    borderWidth: 2,
+    borderColor: 'white',
   },
   gradientButton: {
-    padding: 15,
+    padding: 20,
     alignItems: 'center',
-    borderRadius: 15,
+    borderRadius: 25,
+    backgroundColor: 'white',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: 'red',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   loadingContainer: {
