@@ -20,13 +20,15 @@ import RateAppScreen from '../screens/RateAppScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import SplashScreen from '../screens/SplashScreen';
 import SlotSelectionScreen from '../screens/SlotSelectionScreen';
-import { WalletProvider } from '../context/WalletContext'; // Correct import path
+import EnterVehicleScreen from '../screens/EnterVehicleScreen'; // Corrected import path
+import { WalletProvider } from '../context/WalletContext';
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -37,6 +39,8 @@ const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error loading user from storage:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     loadUser();
@@ -53,7 +57,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
@@ -110,6 +114,7 @@ const MainStackNavigator = () => (
     <MainStack.Screen name="SlotSelection" component={SlotSelectionScreen} />
     <MainStack.Screen name="ConfirmBooking" component={ConfirmBookingScreen} />
     <MainStack.Screen name="Booking" component={BookingScreen} />
+    <MainStack.Screen name="EnterVehicleScreen" component={EnterVehicleScreen} />
   </MainStack.Navigator>
 );
 
@@ -122,14 +127,17 @@ const AuthStack = () => (
 );
 
 const AppNavigation = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <SplashScreen />;
+  }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <>
-            <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Auth" component={AuthStack} />
           </>
@@ -168,7 +176,7 @@ const styles = StyleSheet.create({
 export default function App() {
   return (
     <AuthProvider>
-      <WalletProvider> {/* Wrap the app with WalletProvider */}
+      <WalletProvider>
         <AppNavigation />
       </WalletProvider>
     </AuthProvider>

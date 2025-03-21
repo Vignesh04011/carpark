@@ -1,14 +1,37 @@
-// WalletScreen.js
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Image, Alert 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { WalletContext } from '../context/WalletContext'; // Import WalletContext
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const WalletScreen = ({ navigation }) => {
-  const { balance, walletHistory, updateBalance } = useContext(WalletContext);
+  const [balance, setBalance] = useState(0.00);
   const [amount, setAmount] = useState('');
+  const [walletHistory, setWalletHistory] = useState([]);
+
+  // Fetch wallet balance and history on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const storedBalance = await AsyncStorage.getItem('walletBalance');
+        const storedHistory = await AsyncStorage.getItem('walletHistory');
+        
+        if (storedBalance) {
+          setBalance(parseFloat(storedBalance));
+          console.log('Fetched Wallet Balance:', storedBalance); // Debugging
+        }
+        if (storedHistory) {
+          setWalletHistory(JSON.parse(storedHistory));
+          console.log('Fetched Wallet History:', storedHistory); // Debugging
+        }
+      } catch (error) {
+        console.error('Error fetching wallet data:', error);
+        Alert.alert('Error', 'Failed to fetch wallet data. Please try again.');
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleFakeTransaction = async () => {
     const enteredAmount = parseFloat(amount);
@@ -30,9 +53,23 @@ const WalletScreen = ({ navigation }) => {
       note: 'Fake Wallet Top-Up',
     };
 
-    await updateBalance(newBalance, newTransaction);
-    setAmount('');
-    Alert.alert('Transaction Successful', `₹${enteredAmount.toFixed(2)} added to your wallet.`);
+    const updatedHistory = [newTransaction, ...walletHistory.slice(0, 49)]; // Limit history to 50 entries
+
+    try {
+      await AsyncStorage.setItem('walletBalance', newBalance.toString());
+      await AsyncStorage.setItem('walletHistory', JSON.stringify(updatedHistory)); // Fixed typo here
+
+      setBalance(newBalance);
+      setWalletHistory(updatedHistory);
+      setAmount(''); // Clear input field
+      Alert.alert('Transaction Successful', `₹${enteredAmount.toFixed(2)} added to your wallet.`);
+
+      console.log('Updated Wallet Balance:', newBalance); // Debugging
+      console.log('Updated Wallet History:', updatedHistory); // Debugging
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      Alert.alert('Error', 'Failed to save transaction. Please try again.');
+    }
   };
 
   return (

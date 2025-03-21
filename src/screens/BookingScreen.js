@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, RefreshControl, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, RefreshControl, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
 
@@ -20,6 +20,11 @@ const BookingScreen = () => {
         });
 
         setBookings(sortedBookings);
+
+        // Save the latest booking to AsyncStorage
+        if (sortedBookings.length > 0) {
+          await AsyncStorage.setItem('latestBooking', JSON.stringify(sortedBookings[0]));
+        }
       }
     } catch (error) {
       console.error('Error fetching bookings:', error);
@@ -37,6 +42,31 @@ const BookingScreen = () => {
   const onRefresh = () => {
     setRefreshing(true);
     fetchBookings();
+  };
+
+  const handleNewBooking = async () => {
+    const newBooking = {
+      id: `booking-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID
+      spotName: 'Apartment Parking',
+      carType: 'SUV',
+      numberPlate: 'MH03BH5467',
+      checkInTime: new Date().toISOString(),
+      checkOutTime: new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(), // 1 hour later
+      qrCodeValue: `booking-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique QR code value
+    };
+
+    try {
+      const updatedBookings = [newBooking, ...bookings];
+      await AsyncStorage.setItem('bookings', JSON.stringify(updatedBookings));
+      setBookings(updatedBookings);
+
+      // Save the latest booking to AsyncStorage
+      await AsyncStorage.setItem('latestBooking', JSON.stringify(newBooking));
+      Alert.alert('Success', 'New booking created successfully!');
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      Alert.alert('Error', 'Failed to create booking. Please try again.');
+    }
   };
 
   if (loading) {
@@ -64,8 +94,8 @@ const BookingScreen = () => {
               <Text style={styles.detailText}>Parking: {booking.spotName}</Text>
               <Text style={styles.detailText}>Vehicle: {booking.carType}</Text>
               <Text style={styles.detailText}>Number Plate: {booking.numberPlate}</Text>
-              <Text style={styles.detailText}>Check-In: {new Date(booking.checkInTime).toLocaleTimeString()}</Text>
-              <Text style={styles.detailText}>Check-Out: {new Date(booking.checkOutTime).toLocaleTimeString()}</Text>
+              <Text style={styles.detailText}>Check-In: {new Date(booking.checkInTime).toLocaleString()}</Text>
+              <Text style={styles.detailText}>Check-Out: {new Date(booking.checkOutTime).toLocaleString()}</Text>
             </View>
 
             {/* QR Code */}
@@ -81,6 +111,11 @@ const BookingScreen = () => {
       ) : (
         <Text style={styles.noBookingText}>No bookings found.</Text>
       )}
+
+      {/* Button to create a new booking */}
+      <TouchableOpacity style={styles.newBookingButton} onPress={handleNewBooking}>
+        <Text style={styles.newBookingButtonText}>Create New Booking</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -138,6 +173,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     marginTop: 20,
+  },
+  newBookingButton: {
+    backgroundColor: '#6200ea',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  newBookingButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

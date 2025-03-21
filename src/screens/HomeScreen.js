@@ -1,132 +1,126 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import PromotionsBanner from '../components/PromotionsBanner';
+import QRCode from 'react-native-qrcode-svg';
 import LinearGradient from 'react-native-linear-gradient';
+import PromotionsBanner from '../components/PromotionsBanner';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
-  const [recentBooking, setRecentBooking] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(null);
-  const [progress, setProgress] = useState(100);
+  const [latestBooking, setLatestBooking] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchRecentBooking = async () => {
-      const bookingData = await AsyncStorage.getItem('activeParkingSession');
+  const fetchLatestBooking = async () => {
+    try {
+      const bookingData = await AsyncStorage.getItem('latestBooking');
       if (bookingData) {
         const parsedBooking = JSON.parse(bookingData);
-        setRecentBooking(parsedBooking);
-        calculateTimeLeft(parsedBooking.checkInTime, parsedBooking.checkOutTime);
+        setLatestBooking(parsedBooking);
       }
-    };
-    fetchRecentBooking();
-  }, []);
-
-  const calculateTimeLeft = (checkInTime, checkOutTime) => {
-    const now = new Date();
-    const totalDuration = new Date(checkOutTime) - new Date(checkInTime);
-    const remainingTime = new Date(checkOutTime) - now;
-
-    if (remainingTime > 0) {
-      setTimeLeft(Math.floor(remainingTime / 1000));
-      setProgress((remainingTime / totalDuration) * 100);
-    } else {
-      setTimeLeft(0);
-      setProgress(0);
+    } catch (error) {
+      console.error('Error fetching latest booking:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (recentBooking) {
-      calculateTimeLeft(recentBooking.checkInTime, recentBooking.checkOutTime);
-    }
-  }, [recentBooking]);
+  // Fetch latest booking when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchLatestBooking();
+    }, [])
+  );
 
-  useEffect(() => {
-    if (timeLeft !== null && timeLeft > 0) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [timeLeft]);
-
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}hr : ${mins.toString().padStart(2, '0')}min`;
-  };
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6200ea" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
       {/* Header with Gradient */}
-      <LinearGradient
-        colors={['#6200ea', '#3700b3']}
-        style={styles.headerContainer}
-      >
+      <LinearGradient colors={['#6200ea', '#3700b3']} style={styles.headerContainer}>
         <Text style={styles.headerText}>CarPark</Text>
       </LinearGradient>
 
       {/* Promotions & Offers */}
       <PromotionsBanner />
 
-      {/* Active Parking Session */}
-      {recentBooking && (
+      {/* Latest Booking */}
+      {latestBooking ? (
         <View style={styles.activeSessionCard}>
-          <Image source={require('../assets/icons/parking-area.png')} style={styles.parkingIcon} />
-          <View style={styles.details}>
+          <View style={styles.sessionHeaderContainer}>
             <Text style={styles.sessionHeader}>Active Parking Session</Text>
-            <Text style={styles.text}><Text style={styles.bold}>📍 Parking Area:</Text> {recentBooking.name}</Text>
-            <Text style={styles.text}><Text style={styles.bold}>🚘 Vehicle:</Text> {recentBooking.vehicle}</Text>
-            <Text style={styles.text}><Text style={styles.bold}>⏰ Check-in:</Text> {recentBooking.checkInTime}</Text>
-            <Text style={styles.text}><Text style={styles.bold}>🕒 Check-out:</Text> {recentBooking.checkOutTime}</Text>
-
-            {/* Progress Bar */}
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${progress}%` }]} />
-            </View>
-
-            {/* Time Remaining */}
-            <View style={styles.timeRemainingContainer}>
-              <Text style={styles.timeRemainingText}>
-                ⏳ Time Remaining: {timeLeft > 0 ? formatTime(timeLeft) : 'Session Expired'}
-              </Text>
+          </View>
+          <View style={styles.sessionContent}>
+            {/* QR Code */}
+            <QRCode
+              value={latestBooking.qrCodeValue}
+              size={150}
+            />
+            {/* Booking Details */}
+            <View style={styles.textContainer}>
+              <View style={styles.detailRow}>
+                <Text style={styles.text}><Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.text}><Text style={styles.bold}>Vehicle:</Text> {latestBooking.carType}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.text}><Text style={styles.bold}>Number Plate:</Text> {latestBooking.numberPlate}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(latestBooking.checkInTime).toLocaleString()}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(latestBooking.checkOutTime).toLocaleString()}</Text>
+              </View>
             </View>
           </View>
         </View>
+      ) : (
+        <Text style={styles.noBookingText}>No active parking session.</Text>
       )}
 
-      {/* Subscription Button with Gradient */}
-      <TouchableOpacity 
-        style={styles.subscriptionButton} 
-        onPress={() => navigation.navigate('Subscription')}>
-        <LinearGradient
-          colors={['#6200ea', '#3700b3']}
-          style={styles.gradientButton}
-        >
-          <Text style={styles.subscriptionText}>Subscribe Now</Text>
-        </LinearGradient>
-      </TouchableOpacity>
-
-      {/* EV Station Button with Gradient */}
+      {/* Buttons */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.button}
+        <GradientButton
+          colors={['#6200ea', '#3700b3']}
+          text="Subscribe Now"
+          onPress={() => navigation.navigate('Subscription')}
+        />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <GradientButton
+          colors={['#4A90E2', '#1E90FF']}
+          text="EV Station"
           onPress={() => navigation.navigate('EVStation')}
-        >
-          <LinearGradient
-            colors={['#4A90E2', '#1E90FF']}
-            style={styles.gradientButton}
-          >
-            <Text style={styles.buttonText}>EV Station</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        />
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <GradientButton
+          colors={['#FF5733', '#C70039']}
+          text="Enter Vehicle Number"
+          onPress={() => navigation.navigate('EnterVehicleScreen')}
+        />
       </View>
     </ScrollView>
   );
 };
+
+const GradientButton = ({ colors, text, onPress }) => (
+  <TouchableOpacity style={styles.button} onPress={onPress}>
+    <LinearGradient colors={colors} style={styles.gradientButton}>
+      <Text style={styles.buttonText}>{text}</Text>
+    </LinearGradient>
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -140,6 +134,10 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   headerText: {
     color: 'white',
@@ -147,95 +145,76 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   activeSessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
+    marginBottom: 30,
+    backgroundColor: '#fff',
+    borderRadius: 15,
     padding: 20,
-    marginHorizontal: 15,
-    marginTop: 35,
-    borderRadius: 20,
+    elevation: 5,
+    marginHorizontal: 20,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
-  parkingIcon: {
-    width: 60,
-    height: 60,
-    marginRight: 20,
-  },
-  details: {
-    flex: 1,
+  sessionHeaderContainer: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingBottom: 10,
+    marginBottom: 10,
   },
   sessionHeader: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#6200ea',
+    color: '#333',
+  },
+  sessionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textContainer: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  detailRow: {
     marginBottom: 8,
   },
   text: {
     fontSize: 16,
-    color: '#333',
-    marginVertical: 4,
+    color: '#555',
   },
   bold: {
     fontWeight: 'bold',
-    fontSize: 16,
-    color: '#000',
   },
-  progressBar: {
-    width: '100%',
-    height: 8,
-    backgroundColor: '#ddd',
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginTop: 10,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#6200ea',
-  },
-  timeRemainingContainer: {
-    marginTop: 10,
-    alignItems: 'center',
-  },
-  timeRemainingText: {
+  noBookingText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FF5733',
+    textAlign: 'center',
+    marginTop: 20,
   },
-  subscriptionButton: {
-    margin: 40,
+  buttonContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  button: {
+    width: '80%',
     borderRadius: 15,
     overflow: 'hidden',
-    elevation: 10,
+    elevation: 5,
   },
   gradientButton: {
     padding: 15,
     alignItems: 'center',
     borderRadius: 15,
   },
-  subscriptionText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  buttonContainer: {
-    alignItems: 'center',
-    marginBottom: 80,
-  },
-  button: {
-    width: '60%',
-    borderRadius: 45,
-    overflow: 'hidden',
-    elevation: 10,
-    marginBottom: 80,
-  },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
