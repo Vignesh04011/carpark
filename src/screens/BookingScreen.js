@@ -1,15 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+  Animated,
+} from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import QRCode from 'react-native-qrcode-svg';
 import LinearGradient from 'react-native-linear-gradient';
-import PromotionsBanner from '../components/PromotionsBanner';
 
-const HomeScreen = () => {
+const BookingScreen = () => {
   const navigation = useNavigation();
   const [latestBooking, setLatestBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const buttonScale = new Animated.Value(1);
 
   const fetchLatestBooking = async () => {
     try {
@@ -26,10 +34,24 @@ const HomeScreen = () => {
   };
 
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       fetchLatestBooking();
     }, [])
   );
+
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, {
+      toValue: 0.95,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, {
+      toValue: 1,
+      useNativeDriver: true,
+    }).start();
+  };
 
   if (loading) {
     return (
@@ -40,59 +62,76 @@ const HomeScreen = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      bounces={true}
+      showsVerticalScrollIndicator={false}
+    >
       <LinearGradient colors={['#6200ea', '#3700b3']} style={styles.headerContainer}>
-        <Text style={styles.headerText}>CarPark</Text>
+        <Text style={styles.headerText}>Booking Details</Text>
       </LinearGradient>
 
-      <PromotionsBanner />
-
       {latestBooking ? (
-        <View style={styles.activeSessionCard}>
+        <View style={styles.bookingCard}>
           <Text style={styles.sessionHeader}>Active Parking Session</Text>
-
-          {/* QR Code */}
           <View style={styles.qrContainer}>
-            <QRCode value={latestBooking.qrCodeValue} size={150} />
+            <QRCode value={latestBooking.qrCodeValue} size={200} />
           </View>
-
-          {/* Number Plate Below QR Code */}
-          <Text style={[styles.text, styles.numberPlateText]}>
-            <Text style={styles.bold}>Number Plate:</Text> {latestBooking.numberPlate}
-          </Text>
-
-          {/* Parking Details */}
-          <View style={styles.textContainer}>
-            <Text style={styles.text}><Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}</Text>
-            <Text style={styles.text}><Text style={styles.bold}>Vehicle:</Text> {latestBooking.carType}</Text>
-            <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(latestBooking.checkInTime).toLocaleString()}</Text>
-            <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(latestBooking.checkOutTime).toLocaleString()}</Text>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Vehicle:</Text> {latestBooking.carType}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Number Plate:</Text> {latestBooking.numberPlate}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Check-in:</Text> {new Date(latestBooking.checkInTime).toLocaleString()}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Check-out:</Text> {new Date(latestBooking.checkOutTime).toLocaleString()}
+            </Text>
           </View>
         </View>
       ) : (
         <Text style={styles.noBookingText}>No active parking session.</Text>
       )}
 
-      {/* Buttons */}
+      {/* Buttons with Advanced Styling */}
       <View style={styles.buttonContainer}>
-        <GradientButton text="Subscribe Now" onPress={() => navigation.navigate('Subscription')} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <GradientButton text="EV Station" onPress={() => navigation.navigate('EVStation')} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <GradientButton text="Enter Vehicle Number" onPress={() => navigation.navigate('EnterVehicleScreen')} />
+        <GradientButton
+          text="Back to Home"
+          onPress={() => navigation.goBack()}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          scale={buttonScale}
+        />
       </View>
     </ScrollView>
   );
 };
 
-const GradientButton = ({ text, onPress }) => (
-  <TouchableOpacity style={styles.button} onPress={onPress}>
-    <View style={styles.gradientButton}>
-      <Text style={styles.buttonText}>{text}</Text>
-    </View>
-  </TouchableOpacity>
+const GradientButton = ({ text, onPress, onPressIn, onPressOut, scale }) => (
+  <Animated.View style={{ transform: [{ scale }] }}>
+    <TouchableOpacity
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      activeOpacity={0.8}
+    >
+      <LinearGradient
+        colors={['#6200ea', '#3700b3']}
+        style={styles.gradientButton}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Text style={styles.buttonText}>{text}</Text>
+      </LinearGradient>
+    </TouchableOpacity>
+  </Animated.View>
 );
 
 const styles = StyleSheet.create({
@@ -100,6 +139,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#EDEDED',
     paddingTop: 10,
+  },
+  scrollContent: {
+    paddingBottom: 30,
   },
   headerContainer: {
     padding: 20,
@@ -117,7 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
-  activeSessionCard: {
+  bookingCard: {
     marginBottom: 30,
     backgroundColor: '#fff',
     borderRadius: 15,
@@ -128,30 +170,24 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    alignItems: 'center', // Centering QR Code
+    alignItems: 'center',
   },
   sessionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 20,
   },
   qrContainer: {
-    alignItems: 'center',
-    marginBottom: 10, // Space between QR Code and Number Plate
+    marginBottom: 20,
   },
-  numberPlateText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 10, // Spacing between Number Plate and other details
-  },
-  textContainer: {
+  detailsContainer: {
     width: '100%',
   },
-  text: {
+  detailText: {
     fontSize: 16,
     color: '#555',
+    marginBottom: 10,
     textAlign: 'center',
   },
   bold: {
@@ -166,23 +202,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  button: {
-    width: '90%',
-    borderRadius: 25,
-    overflow: 'hidden',
-    elevation: 5,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
   gradientButton: {
-    padding: 20,
-    alignItems: 'center',
+    width: 200,
     borderRadius: 25,
-    backgroundColor: 'white',
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   buttonText: {
-    color: 'red',
-    fontSize: 18,
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
   loadingContainer: {
@@ -192,4 +226,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default BookingScreen;

@@ -131,7 +131,7 @@ const MapScreen = () => {
             <Image
               source={
                 isWishlisted(spot)
-                  ? require('../assets/icons/default.png') // Use a different icon for wishlisted spots
+                  ? require('../assets/icons/parking-lot.png') // Use a different icon for wishlisted spots
                   : spot.booked
                   ? require('../assets/icons/parking-lot1.png')
                   : require('../assets/icons/parking-lot.png')

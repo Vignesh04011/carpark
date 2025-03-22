@@ -13,7 +13,7 @@ const ConfirmBookingScreen = () => {
   const [carType, setCarType] = useState('SUV');
   const [numberPlate, setNumberPlate] = useState('');
   const [loading, setLoading] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(0); // Add wallet balance state
+  const [walletBalance, setWalletBalance] = useState(0);
 
   const now = new Date();
   const [checkInTime, setCheckInTime] = useState(now);
@@ -145,6 +145,11 @@ const ConfirmBookingScreen = () => {
     }
   };
 
+  // Helper function to format time in 24-hour format
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Confirm Booking for {spot.name}</Text>
@@ -187,7 +192,7 @@ const ConfirmBookingScreen = () => {
         onPress={() => setShowCheckInPicker(true)}
       >
         <Text style={styles.timePickerButtonText}>
-          Check-In Time: {checkInTime.toLocaleTimeString()}
+          Check-In Time: {formatTime(checkInTime)}
         </Text>
       </TouchableOpacity>
 
@@ -197,7 +202,7 @@ const ConfirmBookingScreen = () => {
         onPress={() => setShowCheckOutPicker(true)}
       >
         <Text style={styles.timePickerButtonText}>
-          Check-Out Time: {checkOutTime.toLocaleTimeString()}
+          Check-Out Time: {formatTime(checkOutTime)}
         </Text>
       </TouchableOpacity>
 

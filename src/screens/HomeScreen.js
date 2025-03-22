@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Animated,
-  Easing,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -78,28 +77,26 @@ const HomeScreen = () => {
 
       {latestBooking ? (
         <View style={styles.activeSessionCard}>
-          <View style={styles.sessionHeaderContainer}>
-            <Text style={styles.sessionHeader}>Active Parking Session</Text>
+          <Text style={styles.sessionHeader}>Active Parking Session</Text>
+          <View style={styles.qrContainer}>
+            <QRCode value={latestBooking.qrCodeValue} size={200} />
           </View>
-          <View style={styles.sessionContent}>
-            <QRCode value={latestBooking.qrCodeValue} size={150} />
-            <View style={styles.textContainer}>
-              <View style={styles.detailRow}>
-                <Text style={styles.text}><Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.text}><Text style={styles.bold}>Vehicle:</Text> {latestBooking.carType}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.text}><Text style={styles.bold}>Number Plate:</Text> {latestBooking.numberPlate}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.text}><Text style={styles.bold}>Check-in:</Text> {new Date(latestBooking.checkInTime).toLocaleString()}</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.text}><Text style={styles.bold}>Check-out:</Text> {new Date(latestBooking.checkOutTime).toLocaleString()}</Text>
-              </View>
-            </View>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Parking Area:</Text> {latestBooking.spotName}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Vehicle:</Text> {latestBooking.carType}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Number Plate:</Text> {latestBooking.numberPlate}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Check-in:</Text> {new Date(latestBooking.checkInTime).toLocaleString()}
+            </Text>
+            <Text style={styles.detailText}>
+              <Text style={styles.bold}>Check-out:</Text> {new Date(latestBooking.checkOutTime).toLocaleString()}
+            </Text>
           </View>
         </View>
       ) : (
@@ -194,33 +191,25 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-  },
-  sessionHeaderContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 10,
-    marginBottom: 10,
+    alignItems: 'center',
   },
   sessionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 20,
   },
-  sessionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  qrContainer: {
+    marginBottom: 20,
   },
-  textContainer: {
-    flex: 1,
-    marginLeft: 15,
+  detailsContainer: {
+    width: '100%',
   },
-  detailRow: {
-    marginBottom: 8,
-  },
-  text: {
+  detailText: {
     fontSize: 16,
     color: '#555',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   bold: {
     fontWeight: 'bold',

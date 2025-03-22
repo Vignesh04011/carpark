@@ -10,8 +10,8 @@ const SubscriptionScreen = () => {
     const subscriptions = [
         {
             title: 'Platinum',
-            monthlyPrice: '$19.99/month',
-            yearlyPrice: '$199.99/year',
+            monthlyPrice: ' ₹600/month',
+            yearlyPrice: '  ₹6600/year',
             features: [
                 'Priority Parking',
                 'Limited Reservations',
@@ -21,8 +21,8 @@ const SubscriptionScreen = () => {
         },
         {
             title: 'Normal',
-            monthlyPrice: '$9.99/month',
-            yearlyPrice: '$99.99/year',
+            monthlyPrice: '₹800/month',
+            yearlyPrice: '₹8800/year',
             features: [
                 'Basic Parking Access',
                 'Limited Reservations',
@@ -32,8 +32,8 @@ const SubscriptionScreen = () => {
         },
         {
             title: 'Diamond',
-            monthlyPrice: '$29.99/month',
-            yearlyPrice: '$299.99/year',
+            monthlyPrice: '₹1000/month',
+            yearlyPrice: '₹11000/year',
             features: [
                 'Exclusive Parking',
                 'VIP Access',
